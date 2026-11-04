@@ -1,0 +1,26 @@
+__pycache__/
+*.egg-info/
+*.py[cod]
+.pytest_cache/
+runs/
+/release-assets/
+.env
+.env.*
+!.env.template
+!.env.example
+
+# Data assets are distributed through GitHub Releases, not Git history.
+/data/
+
+# Machine-specific profiles, execution records, and Lean runtimes.
+/.local/
+/analysis/
+/.analysis/
+/logs/
+/runtime/
+
+# Python environments and package build products.
+/.venv*
+/build/
+
+/dist/

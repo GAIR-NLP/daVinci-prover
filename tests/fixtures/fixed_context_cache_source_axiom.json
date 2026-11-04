@@ -1,0 +1,1073 @@
+{
+  "provenance": {
+    "source": "ProverBench complex_analysis__p4_2 source-axiom regression fixture",
+    "lean_toolchain": "leanprover/lean4:v4.35.0",
+    "parser_sha256": "ce4b0cae4f97a0aca9529fcc88cc5f46578fcad28d9702403bc11fd0546691b6",
+    "description": "Actual source-parser records regenerated with Lean 4.35 and the pinned Mathlib environment; source boundaries re-derived and validated against the parsed target. The normalized declaration-value marker was subsequently renamed to DvpCommandParser and its signature fingerprint refreshed; source syntax and spans are unchanged.",
+    "mathlib_commit": "56a005855ea17e0b0958f73ec801ae140b0a1679"
+  },
+  "statement": "import Mathlib\n\n/-\nFor the imaginary unit $i$, where $i^2 = -1$, the following equality holds:\n\n    $i^{73} = i$\n-/\n\nopen Complex\n\naxiom i_pow_73 : I ^ 73 = I\n\n\ntheorem i_pow_mod_4 (n : ℕ) : I ^ n = I ^ (n % 4) := by\n  sorry",
+  "metadata": {
+    "task_id": "regression_fixture",
+    "effective_statement_sha256": "f3d0210516de64a34cc1b93cb2bbef4cb713bad80ee9760eddac13b808d852c9",
+    "statement_sha256": "f3d0210516de64a34cc1b93cb2bbef4cb713bad80ee9760eddac13b808d852c9",
+    "target_name": "i_pow_mod_4",
+    "target_kind": "theorem",
+    "trusted_header_span": [
+      0,
+      161
+    ],
+    "formal_statement_span": [
+      161,
+      224
+    ],
+    "footer_span": [
+      224,
+      224
+    ],
+    "target_signature_span": [
+      161,
+      211
+    ],
+    "target_proof_span": [
+      213,
+      224
+    ],
+    "proof_slots": [
+      {
+        "name": "i_pow_mod_4",
+        "kind": "theorem",
+        "declaration_span": [
+          161,
+          224
+        ],
+        "signature_span": [
+          161,
+          211
+        ],
+        "assignment_span": [
+          211,
+          213
+        ],
+        "proof_span": [
+          213,
+          224
+        ],
+        "placeholder_span": [
+          219,
+          224
+        ],
+        "role": "target"
+      }
+    ]
+  },
+  "commands": [
+    {
+      "start": 0,
+      "end": 14,
+      "source": "import Mathlib",
+      "kind": "Lean.Parser.Module.import",
+      "ast": [
+        "node",
+        "Lean.Parser.Module.import",
+        [
+          [
+            "node",
+            "null",
+            []
+          ],
+          [
+            "node",
+            "null",
+            []
+          ],
+          [
+            "atom",
+            "import"
+          ],
+          [
+            "node",
+            "null",
+            []
+          ],
+          [
+            "ident",
+            [
+              "Mathlib"
+            ]
+          ],
+          [
+            "node",
+            "null",
+            []
+          ]
+        ]
+      ],
+      "fingerprint": "81d34777d1b91f187ce7aaae11d75b7bd95d49a6cf6426b171868bfe7b510535",
+      "decl_kind": null,
+      "decl_name": null,
+      "decl_name_parts": [],
+      "full_name": null,
+      "namespace": [],
+      "signature_start": null,
+      "signature_end": null,
+      "value_start": null,
+      "value_end": null,
+      "body_start": null,
+      "body_end": null,
+      "signature_ast": null,
+      "signature_fingerprint": null,
+      "scope_kind": null,
+      "scope_name": null
+    },
+    {
+      "start": 117,
+      "end": 129,
+      "source": "open Complex",
+      "kind": "Lean.Parser.Command.open",
+      "ast": [
+        "node",
+        "Lean.Parser.Command.open",
+        [
+          [
+            "atom",
+            "open"
+          ],
+          [
+            "node",
+            "Lean.Parser.Command.openSimple",
+            [
+              [
+                "node",
+                "null",
+                [
+                  [
+                    "ident",
+                    [
+                      "Complex"
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ]
+      ],
+      "fingerprint": "ad4455fed91d498d208fba69baab2af094173deaa280a9ed90729b6551a58e43",
+      "decl_kind": null,
+      "decl_name": null,
+      "decl_name_parts": [],
+      "full_name": null,
+      "namespace": [],
+      "signature_start": null,
+      "signature_end": null,
+      "value_start": null,
+      "value_end": null,
+      "body_start": null,
+      "body_end": null,
+      "signature_ast": null,
+      "signature_fingerprint": null,
+      "scope_kind": null,
+      "scope_name": null
+    },
+    {
+      "start": 131,
+      "end": 158,
+      "source": "axiom i_pow_73 : I ^ 73 = I",
+      "kind": "Lean.Parser.Command.declaration",
+      "ast": [
+        "node",
+        "Lean.Parser.Command.declaration",
+        [
+          [
+            "node",
+            "Lean.Parser.Command.declModifiers",
+            [
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ]
+            ]
+          ],
+          [
+            "node",
+            "Lean.Parser.Command.axiom",
+            [
+              [
+                "atom",
+                "axiom"
+              ],
+              [
+                "node",
+                "Lean.Parser.Command.declId",
+                [
+                  [
+                    "ident",
+                    [
+                      "i_pow_73"
+                    ]
+                  ],
+                  [
+                    "node",
+                    "null",
+                    []
+                  ]
+                ]
+              ],
+              [
+                "node",
+                "Lean.Parser.Command.declSig",
+                [
+                  [
+                    "node",
+                    "null",
+                    []
+                  ],
+                  [
+                    "node",
+                    "Lean.Parser.Term.typeSpec",
+                    [
+                      [
+                        "atom",
+                        ":"
+                      ],
+                      [
+                        "node",
+                        "«term_=_»",
+                        [
+                          [
+                            "node",
+                            "«term_^_»",
+                            [
+                              [
+                                "ident",
+                                [
+                                  "I"
+                                ]
+                              ],
+                              [
+                                "atom",
+                                "^"
+                              ],
+                              [
+                                "node",
+                                "num",
+                                [
+                                  [
+                                    "atom",
+                                    "73"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "atom",
+                            "="
+                          ],
+                          [
+                            "ident",
+                            [
+                              "I"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ]
+      ],
+      "fingerprint": "6546fc5e5c021d6374c5f7356700606497ddc38db9bdc5c80cfc0d4aa257cddc",
+      "decl_kind": "axiom",
+      "decl_name": "i_pow_73",
+      "decl_name_parts": [
+        "i_pow_73"
+      ],
+      "full_name": "i_pow_73",
+      "namespace": [],
+      "signature_start": 131,
+      "signature_end": null,
+      "value_start": null,
+      "value_end": null,
+      "body_start": null,
+      "body_end": null,
+      "signature_ast": [
+        "node",
+        "Lean.Parser.Command.declaration",
+        [
+          [
+            "node",
+            "Lean.Parser.Command.declModifiers",
+            [
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ]
+            ]
+          ],
+          [
+            "node",
+            "Lean.Parser.Command.axiom",
+            [
+              [
+                "atom",
+                "axiom"
+              ],
+              [
+                "node",
+                "Lean.Parser.Command.declId",
+                [
+                  [
+                    "ident",
+                    [
+                      "i_pow_73"
+                    ]
+                  ],
+                  [
+                    "node",
+                    "null",
+                    []
+                  ]
+                ]
+              ],
+              [
+                "node",
+                "Lean.Parser.Command.declSig",
+                [
+                  [
+                    "node",
+                    "null",
+                    []
+                  ],
+                  [
+                    "node",
+                    "Lean.Parser.Term.typeSpec",
+                    [
+                      [
+                        "atom",
+                        ":"
+                      ],
+                      [
+                        "node",
+                        "«term_=_»",
+                        [
+                          [
+                            "node",
+                            "«term_^_»",
+                            [
+                              [
+                                "ident",
+                                [
+                                  "I"
+                                ]
+                              ],
+                              [
+                                "atom",
+                                "^"
+                              ],
+                              [
+                                "node",
+                                "num",
+                                [
+                                  [
+                                    "atom",
+                                    "73"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "atom",
+                            "="
+                          ],
+                          [
+                            "ident",
+                            [
+                              "I"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ]
+      ],
+      "signature_fingerprint": "6546fc5e5c021d6374c5f7356700606497ddc38db9bdc5c80cfc0d4aa257cddc",
+      "scope_kind": null,
+      "scope_name": null
+    },
+    {
+      "start": 161,
+      "end": 224,
+      "source": "theorem i_pow_mod_4 (n : ℕ) : I ^ n = I ^ (n % 4) := by\n  sorry",
+      "kind": "Lean.Parser.Command.declaration",
+      "ast": [
+        "node",
+        "Lean.Parser.Command.declaration",
+        [
+          [
+            "node",
+            "Lean.Parser.Command.declModifiers",
+            [
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ]
+            ]
+          ],
+          [
+            "node",
+            "Lean.Parser.Command.theorem",
+            [
+              [
+                "atom",
+                "theorem"
+              ],
+              [
+                "node",
+                "Lean.Parser.Command.declId",
+                [
+                  [
+                    "ident",
+                    [
+                      "i_pow_mod_4"
+                    ]
+                  ],
+                  [
+                    "node",
+                    "null",
+                    []
+                  ]
+                ]
+              ],
+              [
+                "node",
+                "Lean.Parser.Command.declSig",
+                [
+                  [
+                    "node",
+                    "null",
+                    [
+                      [
+                        "node",
+                        "Lean.Parser.Term.explicitBinder",
+                        [
+                          [
+                            "atom",
+                            "("
+                          ],
+                          [
+                            "node",
+                            "null",
+                            [
+                              [
+                                "ident",
+                                [
+                                  "n"
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "node",
+                            "null",
+                            [
+                              [
+                                "atom",
+                                ":"
+                              ],
+                              [
+                                "node",
+                                "termℕ",
+                                [
+                                  [
+                                    "atom",
+                                    "ℕ"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "node",
+                            "null",
+                            []
+                          ],
+                          [
+                            "atom",
+                            ")"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "node",
+                    "Lean.Parser.Term.typeSpec",
+                    [
+                      [
+                        "atom",
+                        ":"
+                      ],
+                      [
+                        "node",
+                        "«term_=_»",
+                        [
+                          [
+                            "node",
+                            "«term_^_»",
+                            [
+                              [
+                                "ident",
+                                [
+                                  "I"
+                                ]
+                              ],
+                              [
+                                "atom",
+                                "^"
+                              ],
+                              [
+                                "ident",
+                                [
+                                  "n"
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "atom",
+                            "="
+                          ],
+                          [
+                            "node",
+                            "«term_^_»",
+                            [
+                              [
+                                "ident",
+                                [
+                                  "I"
+                                ]
+                              ],
+                              [
+                                "atom",
+                                "^"
+                              ],
+                              [
+                                "node",
+                                "Lean.Parser.Term.paren",
+                                [
+                                  [
+                                    "node",
+                                    "Lean.Parser.Term.hygienicLParen",
+                                    [
+                                      [
+                                        "atom",
+                                        "("
+                                      ],
+                                      [
+                                        "node",
+                                        "hygieneInfo",
+                                        [
+                                          [
+                                            "ident",
+                                            []
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "node",
+                                    "«term_%_»",
+                                    [
+                                      [
+                                        "ident",
+                                        [
+                                          "n"
+                                        ]
+                                      ],
+                                      [
+                                        "atom",
+                                        "%"
+                                      ],
+                                      [
+                                        "node",
+                                        "num",
+                                        [
+                                          [
+                                            "atom",
+                                            "4"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "atom",
+                                    ")"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ],
+              [
+                "node",
+                "Lean.Parser.Command.declValSimple",
+                [
+                  [
+                    "atom",
+                    ":="
+                  ],
+                  [
+                    "node",
+                    "Lean.Parser.Term.byTactic",
+                    [
+                      [
+                        "atom",
+                        "by"
+                      ],
+                      [
+                        "node",
+                        "Lean.Parser.Tactic.tacticSeq",
+                        [
+                          [
+                            "node",
+                            "Lean.Parser.Tactic.tacticSeq1Indented",
+                            [
+                              [
+                                "node",
+                                "null",
+                                [
+                                  [
+                                    "node",
+                                    "Lean.Parser.Tactic.tacticSorry",
+                                    [
+                                      [
+                                        "atom",
+                                        "sorry"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "node",
+                    "Lean.Parser.Termination.suffix",
+                    [
+                      [
+                        "node",
+                        "null",
+                        []
+                      ],
+                      [
+                        "node",
+                        "null",
+                        []
+                      ]
+                    ]
+                  ],
+                  [
+                    "node",
+                    "null",
+                    []
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ]
+      ],
+      "fingerprint": "0694a7c30f10fa69765e75703903610767fcfce1a7f73fa70220781b845b222b",
+      "decl_kind": "theorem",
+      "decl_name": "i_pow_mod_4",
+      "decl_name_parts": [
+        "i_pow_mod_4"
+      ],
+      "full_name": "i_pow_mod_4",
+      "namespace": [],
+      "signature_start": 161,
+      "signature_end": 211,
+      "value_start": 211,
+      "value_end": 224,
+      "body_start": 214,
+      "body_end": 224,
+      "signature_ast": [
+        "node",
+        "Lean.Parser.Command.declaration",
+        [
+          [
+            "node",
+            "Lean.Parser.Command.declModifiers",
+            [
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ],
+              [
+                "node",
+                "null",
+                []
+              ]
+            ]
+          ],
+          [
+            "node",
+            "Lean.Parser.Command.theorem",
+            [
+              [
+                "atom",
+                "theorem"
+              ],
+              [
+                "node",
+                "Lean.Parser.Command.declId",
+                [
+                  [
+                    "ident",
+                    [
+                      "i_pow_mod_4"
+                    ]
+                  ],
+                  [
+                    "node",
+                    "null",
+                    []
+                  ]
+                ]
+              ],
+              [
+                "node",
+                "Lean.Parser.Command.declSig",
+                [
+                  [
+                    "node",
+                    "null",
+                    [
+                      [
+                        "node",
+                        "Lean.Parser.Term.explicitBinder",
+                        [
+                          [
+                            "atom",
+                            "("
+                          ],
+                          [
+                            "node",
+                            "null",
+                            [
+                              [
+                                "ident",
+                                [
+                                  "n"
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "node",
+                            "null",
+                            [
+                              [
+                                "atom",
+                                ":"
+                              ],
+                              [
+                                "node",
+                                "termℕ",
+                                [
+                                  [
+                                    "atom",
+                                    "ℕ"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "node",
+                            "null",
+                            []
+                          ],
+                          [
+                            "atom",
+                            ")"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "node",
+                    "Lean.Parser.Term.typeSpec",
+                    [
+                      [
+                        "atom",
+                        ":"
+                      ],
+                      [
+                        "node",
+                        "«term_=_»",
+                        [
+                          [
+                            "node",
+                            "«term_^_»",
+                            [
+                              [
+                                "ident",
+                                [
+                                  "I"
+                                ]
+                              ],
+                              [
+                                "atom",
+                                "^"
+                              ],
+                              [
+                                "ident",
+                                [
+                                  "n"
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "atom",
+                            "="
+                          ],
+                          [
+                            "node",
+                            "«term_^_»",
+                            [
+                              [
+                                "ident",
+                                [
+                                  "I"
+                                ]
+                              ],
+                              [
+                                "atom",
+                                "^"
+                              ],
+                              [
+                                "node",
+                                "Lean.Parser.Term.paren",
+                                [
+                                  [
+                                    "node",
+                                    "Lean.Parser.Term.hygienicLParen",
+                                    [
+                                      [
+                                        "atom",
+                                        "("
+                                      ],
+                                      [
+                                        "node",
+                                        "hygieneInfo",
+                                        [
+                                          [
+                                            "ident",
+                                            []
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "node",
+                                    "«term_%_»",
+                                    [
+                                      [
+                                        "ident",
+                                        [
+                                          "n"
+                                        ]
+                                      ],
+                                      [
+                                        "atom",
+                                        "%"
+                                      ],
+                                      [
+                                        "node",
+                                        "num",
+                                        [
+                                          [
+                                            "atom",
+                                            "4"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "atom",
+                                    ")"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ],
+              [
+                "node",
+                "DvpCommandParser.declarationValue",
+                []
+              ]
+            ]
+          ]
+        ]
+      ],
+      "signature_fingerprint": "58ee0d8ffd459a721fedb664deb8aa7e2a9999bbc8b706db71b92133304f2778",
+      "scope_kind": null,
+      "scope_name": null
+    }
+  ],
+  "trusted_syntax": [
+    "open Complex"
+  ]
+}

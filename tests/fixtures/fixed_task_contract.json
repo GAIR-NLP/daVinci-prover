@@ -1,0 +1,129 @@
+[
+  {
+    "name": "inline_comment_only",
+    "expected_accept": true,
+    "reason": "Real Math Imo1959P2c: removing a same-line comment must not change source meaning or duplicate originalValue.",
+    "statement": "import Mathlib.Util.AssertNoSorry\n/- special open -/ open Nat\ndef originalValue : Nat := 7\ntheorem target : originalValue = 7 := by sorry\n",
+    "candidate": "import Mathlib.Util.AssertNoSorry\nopen Nat\ndef originalValue : Nat := 7\ntheorem target : originalValue = 7 := by rfl\n"
+  },
+  {
+    "name": "extra_resource_option",
+    "expected_accept": true,
+    "reason": "Real Math Bulgaria1998P1 / Prover AIME2024iiP7: harmless recursion limit insertion must not duplicate the fixed-source declaration.",
+    "statement": "import Mathlib.Util.AssertNoSorry\nset_option maxHeartbeats 0\nabbrev originalNumber : Nat := 3\ntheorem target : originalNumber = 3 := by sorry\n",
+    "candidate": "import Mathlib.Util.AssertNoSorry\nset_option maxHeartbeats 0\nset_option maxRecDepth 1000000\nabbrev originalNumber : Nat := 3\ntheorem target : originalNumber = 3 := by rfl\n"
+  },
+  {
+    "name": "helper_before_original_definition",
+    "expected_accept": true,
+    "reason": "Legitimate candidate helper before copied source definitions must remain available without duplicating or replacing source definitions.",
+    "statement": "import Mathlib.Util.AssertNoSorry\nimport Mathlib.Tactic.Lemma\ndef originalValue : Nat := 7\ntheorem target : originalValue = 7 := by sorry\n",
+    "candidate": "import Mathlib.Util.AssertNoSorry\nimport Mathlib.Tactic.Lemma\nlemma candidateHelper : (7 : Nat) = 7 := rfl\ndef originalValue : Nat := 7\ntheorem target : originalValue = 7 := by exact candidateHelper\n"
+  },
+  {
+    "name": "original_source_axiom_retained",
+    "expected_accept": true,
+    "reason": "An unchanged axiom declared by the trusted dataset belongs to fixed source context and must be allowed; its origin differs from a model-added axiom.",
+    "statement": "import Mathlib.Util.AssertNoSorry\naxiom sourceFact : (1 : Nat) = 1\ntheorem target : (1 : Nat) = 1 := by sorry\n",
+    "candidate": "import Mathlib.Util.AssertNoSorry\naxiom sourceFact : (1 : Nat) = 1\ntheorem target : (1 : Nat) = 1 := by exact sourceFact\n"
+  },
+  {
+    "name": "original_source_axiom_omitted",
+    "expected_accept": true,
+    "reason": "Real Prover p11_2: candidate may omit an unnecessary source axiom while fixed original context remains authoritative.",
+    "statement": "import Mathlib.Util.AssertNoSorry\naxiom sourceFact : (1 : Nat) = 1\ntheorem target : (1 : Nat) = 1 := by sorry\n",
+    "candidate": "import Mathlib.Util.AssertNoSorry\ntheorem target : (1 : Nat) = 1 := by rfl\n"
+  },
+  {
+    "name": "model_added_axiom",
+    "expected_accept": false,
+    "reason": "Model-added axioms must not become trusted source declarations, including otherwise standalone-typechecking proofs.",
+    "statement": "import Mathlib.Util.AssertNoSorry\ntheorem target : False := by sorry\n",
+    "candidate": "import Mathlib.Util.AssertNoSorry\naxiom injectedFact : False\ntheorem target : False := by exact injectedFact\n"
+  },
+  {
+    "name": "model_mutates_source_axiom",
+    "expected_accept": false,
+    "reason": "A same-named model axiom with a changed statement must not replace the trusted input axiom.",
+    "statement": "import Mathlib.Util.AssertNoSorry\naxiom sourceFact : True\ntheorem target : False := by sorry\n",
+    "candidate": "import Mathlib.Util.AssertNoSorry\naxiom sourceFact : False\ntheorem target : False := by exact sourceFact\n"
+  },
+  {
+    "name": "model_mutates_source_definition",
+    "expected_accept": false,
+    "reason": "Real Math Imo2003P2 removes alternatives from solution_set. A changed source definition cannot validate a different target.",
+    "statement": "import Mathlib.Util.AssertNoSorry\ndef originalPredicate : Prop := False\ntheorem target : originalPredicate := by sorry\n",
+    "candidate": "import Mathlib.Util.AssertNoSorry\ndef originalPredicate : Prop := True\ntheorem target : originalPredicate := by trivial\n"
+  },
+  {
+    "name": "model_adds_ambient_assumption",
+    "expected_accept": false,
+    "reason": "Real Prover linear_algebra p12 adds include hAB. Candidate ambient assumptions must not strengthen the original theorem assumptions.",
+    "statement": "import Mathlib.Util.AssertNoSorry\ndef originalPredicate : Prop := False\ntheorem target : originalPredicate := by sorry\n",
+    "candidate": "import Mathlib.Util.AssertNoSorry\ndef originalPredicate : Prop := False\nvariable (extra : False)\ninclude extra\ntheorem target : originalPredicate := by exact extra\n"
+  },
+  {
+    "name": "all_source_helper_holes_proved",
+    "expected_accept": true,
+    "reason": "Real Prover p30: all original lemma holes and the final theorem must be proved, and the target cannot be misselected as the first helper.",
+    "statement": "import Mathlib.Util.AssertNoSorry\nimport Mathlib.Tactic.Lemma\nlemma helperA (n : Nat) : n = n := sorry\nlemma helperB : (0 : Nat) = 0 := by sorry\ntheorem target : (1 : Nat) = 1 := by sorry\n",
+    "candidate": "import Mathlib.Util.AssertNoSorry\nimport Mathlib.Tactic.Lemma\nlemma helperA (n : Nat) : n = n := by rfl\nlemma helperB : (0 : Nat) = 0 := by rfl\ntheorem target : (1 : Nat) = 1 := by rfl\n"
+  },
+  {
+    "name": "unused_source_helper_hole_remains",
+    "expected_accept": false,
+    "reason": "Even an unused original source helper with sorry must be completed. Checking only final-target transitive axioms is insufficient.",
+    "statement": "import Mathlib.Util.AssertNoSorry\nimport Mathlib.Tactic.Lemma\nlemma helperA (n : Nat) : n = n := sorry\nlemma helperB : (0 : Nat) = 0 := by sorry\ntheorem target : (1 : Nat) = 1 := by sorry\n",
+    "candidate": "import Mathlib.Util.AssertNoSorry\nimport Mathlib.Tactic.Lemma\nlemma helperA (n : Nat) : n = n := by rfl\nlemma helperB : (0 : Nat) = 0 := by sorry\ntheorem target : (1 : Nat) = 1 := by rfl\n"
+  },
+  {
+    "name": "final_target_only_helpers_still_holes",
+    "expected_accept": false,
+    "reason": "Multiple source helper sorries must not be silently trusted or dropped just because the target proof is independent.",
+    "statement": "import Mathlib.Util.AssertNoSorry\nimport Mathlib.Tactic.Lemma\nlemma helperA (n : Nat) : n = n := sorry\nlemma helperB : (0 : Nat) = 0 := by sorry\ntheorem target : (1 : Nat) = 1 := by sorry\n",
+    "candidate": "import Mathlib.Util.AssertNoSorry\nimport Mathlib.Tactic.Lemma\nlemma helperA (n : Nat) : n = n := sorry\nlemma helperB : (0 : Nat) = 0 := by sorry\ntheorem target : (1 : Nat) = 1 := by rfl\n"
+  },
+  {
+    "name": "preproved_helper_not_target",
+    "expected_accept": true,
+    "reason": "Real Math Usa2023P4/P5: a preproved helper preceding the actual target must not become the completion target.",
+    "statement": "import Mathlib.Util.AssertNoSorry\nimport Mathlib.Tactic.Lemma\nlemma alreadyProvedHelper (n : Nat) : n = n := by rfl\ntheorem target : (1 : Nat) = 1 := by sorry\n",
+    "candidate": "import Mathlib.Util.AssertNoSorry\nimport Mathlib.Tactic.Lemma\nlemma alreadyProvedHelper (n : Nat) : n = n := by rfl\ntheorem target : (1 : Nat) = 1 := by exact alreadyProvedHelper 1\n"
+  },
+  {
+    "name": "def_only_structure_target",
+    "expected_accept": false,
+    "reason": "ProofNet def-only targets are not enabled by the two supported benchmark sidecars.",
+    "statement": "import Mathlib.Util.AssertNoSorry\nnoncomputable def target : Nat × Nat := by sorry\n",
+    "candidate": "import Mathlib.Util.AssertNoSorry\nnoncomputable def target : Nat × Nat := by exact (1, 2)\n",
+    "expected_error_kind": "unsupported_definition_obligation"
+  },
+  {
+    "name": "namespace_shadowed_definition",
+    "expected_accept": false,
+    "reason": "A namespaced shadow must not redirect the original root target to an easier predicate or count a different qualified theorem.",
+    "statement": "import Mathlib.Util.AssertNoSorry\ndef originalPredicate : Prop := False\ntheorem target : originalPredicate := by sorry\n",
+    "candidate": "import Mathlib.Util.AssertNoSorry\ndef originalPredicate : Prop := False\nnamespace Fake\ndef originalPredicate : Prop := True\ntheorem target : originalPredicate := by trivial\nend Fake\n"
+  },
+  {
+    "name": "original_namespace_section_copied",
+    "expected_accept": true,
+    "reason": "Reject new namespace/section commands without rejecting an unchanged original namespace/section context.",
+    "statement": "import Mathlib.Util.AssertNoSorry\nnamespace OriginalScope\nsection\nvariable (n : Nat)\ndef preserved (m : Nat) : Nat := m\ntheorem target : preserved n = n := by sorry\nend\nend OriginalScope\n",
+    "candidate": "import Mathlib.Util.AssertNoSorry\nnamespace OriginalScope\nsection\nvariable (n : Nat)\ndef preserved (m : Nat) : Nat := m\ntheorem target : preserved n = n := by rfl\nend\nend OriginalScope\n"
+  },
+  {
+    "name": "original_namespace_section_omitted",
+    "expected_accept": true,
+    "reason": "Omitting source header is allowed: the fixed original namespace, section variables and definitions must supply the target context.",
+    "statement": "import Mathlib.Util.AssertNoSorry\nnamespace OriginalScope\nsection\nvariable (n : Nat)\ndef preserved (m : Nat) : Nat := m\ntheorem target : preserved n = n := by sorry\nend\nend OriginalScope\n",
+    "candidate": "theorem target : preserved n = n := by rfl\n"
+  },
+  {
+    "name": "internal_expected_axiom_oracle",
+    "expected_accept": false,
+    "reason": "No internal expected-type axiom is injected; guessing an internal verifier name cannot provide a proof.",
+    "statement": "import Mathlib.Util.AssertNoSorry\ntheorem target : False := by sorry\n",
+    "candidate": "import Mathlib.Util.AssertNoSorry\ntheorem target : False := by exact _expected_target_a41ee6d3cee4738a\n"
+  }
+]
