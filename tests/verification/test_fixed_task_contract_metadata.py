@@ -125,7 +125,9 @@ def test_manifest_pins_fixed_policy_parser_and_rejects_legacy_resume(staged_data
         "workspace": str(Path(workspace).resolve()), "revision": "test-environment",
     })
     dataset, rows, _ = staged_dataset
-    args = build_eval_parser().parse_args(["--model", "mock", "--lean-retrieve", "false"])
+    args = build_eval_parser().parse_args([
+        "--model", "mock", "--lean-retrieve", "false", "--python-execute", "false",
+    ])
     legacy = build_run_manifest(args, dataset=dataset, run_root=tmp_path, rows=rows)
     activate(dataset)
     identity = load_contract_sidecar(dataset, rows, require_active=True)

@@ -32,16 +32,17 @@ git clone https://github.com/zwhong714/daVinci-prover.git
 cd daVinci-prover
 python3.12 -m venv .venv
 source .venv/bin/activate
-pip install -e .
+pip install -e '.[lean-explore-local,python-experiments]'
 mkdir -p .local
 cp examples/proof.env.sh .local/proof.env.sh
+cp examples/leanexplore-local.env.sh .local/leanexplore.env.sh
 dvp --help
 ```
 
-Prepare the pinned [Lean / Mathlib workspace](docs/installation.md#lean-and-mathlib)
-and [register Comparator](docs/verification.md#installing-the-lean-435-verifier).
-Save custom paths in `.local/proof.env.sh`.
-Optional [local retrieval](docs/leanexplore.md) uses the published LeanExplore 4.35 snapshot.
+Prepare the pinned [Lean / Mathlib workspace](docs/installation.md#lean-and-mathlib),
+[register Comparator](docs/verification.md#installing-the-lean-435-verifier), and
+download the [LeanExplore 4.35 data, models, and source](docs/leanexplore.md).
+Save custom paths in the two `.local/` profiles.
 
 ## Quick start
 
@@ -50,6 +51,9 @@ After setup, configure the [DeepSeek API](https://api-docs.deepseek.com/) from t
 ```bash
 source .venv/bin/activate
 source .local/proof.env.sh
+source .local/leanexplore.env.sh
+python scripts/check_leanexplore_local.py
+python -m dvp.cli.check_python
 export OPENAI_API_KEY="your-deepseek-api-key"
 export DAVINCI_MODEL=deepseek-flash
 export OPENAI_BASE_URL=https://api.deepseek.com
@@ -61,7 +65,7 @@ export OPENAI_BASE_URL=https://api.deepseek.com
 dvp prove \
   --thinking enabled --reasoning-effort high \
   --theorem $'import Mathlib\ntheorem demo (n : Nat) : n + 0 = n := by sorry' \
-  --lean-retrieve false \
+  --lean-retrieve true --python-execute true \
   --max-turns 20 --max-tokens 16384 --lean-timeout 120 \
   --trace-level full
 ```
@@ -74,14 +78,14 @@ The proof, verdict, and trajectory are saved under `runs/dvp_<timestamp>/`.
 dvp eval \
   --dataset benchmarks/putnam200.jsonl --split all \
   --thinking enabled --reasoning-effort high \
-  --lean-retrieve false --concurrency 20 \
+  --lean-retrieve true --python-execute true --concurrency 20 \
   --max-turns 200 --max-tool-calls 800 --max-tokens 32768 \
   --lean-timeout 1800 --llm-timeout 1800 --task-timeout 14400 \
   --attempts-per-task 1 --retries 2 --trace-level full \
   --run-root "runs/putnam200_$(date +%Y%m%d_%H%M%S)"
 ```
 
-The run directory contains `summary.json`, `results.jsonl`, and per-task traces under `tasks/`. Enable `--lean-retrieve true` after configuring [local retrieval](docs/leanexplore.md). See [usage](docs/usage.md) for resume and other options.
+The run directory contains `summary.json`, `results.jsonl`, and per-task traces under `tasks/`. See [usage](docs/usage.md) for resume and other options.
 
 ## Harness design
 
@@ -98,7 +102,7 @@ Each attempt uses one model conversation and its own `Submission.lean`. The agen
 | `lean_verify` | Compile saved files or inline probes. |
 | `python_execute` | Run isolated NumPy, SymPy, and mpmath experiments. |
 
-The model calls tools and receives their results. Consecutive edits are saved together, then each changed Lean file is checked once. Retrieval is enabled by default; [Python](docs/python-experiments.md) is optional.
+The model calls tools and receives their results. Consecutive edits are saved together, then each changed Lean file is checked once. Local retrieval and [Python experiments](docs/python-experiments.md) are enabled by default.
 
 When development ends, Comparator checks the saved proof and local modules against the unchanged problem. Compilation feedback and the final chat reply do not determine acceptance. See [verification](docs/verification.md).
 

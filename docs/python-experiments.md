@@ -2,12 +2,12 @@
 
 [Back to documentation](README.md)
 
-The optional `python_execute` tool runs locally beside DVP using Landlock + seccomp.
+The `python_execute` tool is enabled by default in `dvp prove` and `dvp eval`, and runs locally beside DVP using Landlock + seccomp.
 It supports the Python standard library, **NumPy**, **SymPy**, and **mpmath**.
 
 ## Enable
 
-Install all three math packages in the DVP environment and check the sandbox:
+The [full installation](installation.md) includes all three math packages. To add them to an existing DVP environment, install them and check the sandbox:
 
 ```bash
 sudo apt-get install -y libseccomp2 libstdc++6 libgcc-s1 zlib1g
@@ -20,7 +20,7 @@ Landlock and seccomp; root or user/mount namespaces are not required.
 A failed check stops startup without falling back to unrestricted Python.
 Run the check on each deployment machine.
 
-Add these options to `dvp prove` or `dvp eval`:
+These are the default options for `dvp prove` and `dvp eval`:
 
 ```bash
 --python-execute true \
@@ -29,8 +29,9 @@ Add these options to `dvp prove` or `dvp eval`:
 --python-max-output-bytes 12000
 ```
 
-Python is disabled by default; the limits above are defaults. Use a new run
-directory after changing the executor, allowed packages, or limits.
+Use `--python-execute false` only when you explicitly want a run without Python.
+A missing package or failed sandbox check does not disable the tool automatically.
+Use a new run directory after changing the executor, allowed packages, or limits.
 
 ## What the model can use
 

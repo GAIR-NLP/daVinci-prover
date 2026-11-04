@@ -47,6 +47,7 @@ def test_changed_runtime_manifest_prevents_resume_even_with_endpoint_change(tmp_
     monkeypatch.setattr(comparator, "runtime_for", lambda _: {"manifest": str(runtime_manifest)})
     args = build_parser().parse_args([
         "--dataset", str(dataset), "--model", "mock", "--lean-retrieve", "false",
+        "--python-execute", "false",
         "--target-workspace", str(tmp_path), "--run-root", str(tmp_path / "run"),
     ])
     previous = build_run_manifest(args, dataset=dataset, run_root=args.run_root)

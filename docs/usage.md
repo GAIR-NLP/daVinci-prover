@@ -3,21 +3,21 @@
 [Back to documentation](README.md)
 
 Run commands from the repository root with your Python environment activated.
-Complete [installation](installation.md) and [Comparator registration](verification.md) first.
+Complete [installation](installation.md), including local retrieval, Python packages,
+and [Comparator registration](verification.md), first.
 
 ## Quick Start
 
-For a local or hosted OpenAI-compatible endpoint, set:
+Load your saved profiles and configure a local or hosted OpenAI-compatible endpoint:
 
 ```bash
-export DVP_ROOT="$PWD"
-export PATH="${ELAN_HOME:-$HOME/.elan}/bin:$PATH"
+source .local/proof.env.sh
+source .local/leanexplore.env.sh
 export DAVINCI_MODEL=your-served-model-name
 export OPENAI_BASE_URL=http://127.0.0.1:8000/v1
 export OPENAI_API_KEY=your-api-key
-export DAVINCI_TARGET_WORKSPACE="${DAVINCI_TARGET_WORKSPACE:-$DVP_ROOT/runtime/mathlib4-4.35}"
-export DVP_COMPARATOR_ROOT="${DVP_COMPARATOR_ROOT:-$DVP_ROOT/runtime/comparator}"
-export DAVINCI_LLM_TRUST_ENV=0
+python scripts/check_leanexplore_local.py
+python -m dvp.cli.check_python
 ```
 
 Use `EMPTY` only for endpoints without authentication. Set `DAVINCI_LLM_TRUST_ENV=1`
@@ -37,7 +37,7 @@ parameters are not silently dropped. Native providers use LiteLLM's proxy settin
 ```bash
 dvp prove \
   --theorem $'import Mathlib\ntheorem demo (n : Nat) : n + 0 = n := by sorry' \
-  --lean-retrieve false \
+  --lean-retrieve true --python-execute true \
   --max-turns 20 --max-tokens 16384 --lean-timeout 120 \
   --trace-level full \
   --run-dir "$DVP_ROOT/runs/demo_$(date +%Y%m%d_%H%M%S)"
@@ -48,7 +48,7 @@ dvp prove \
 ```bash
 dvp eval \
   --dataset benchmarks/fate_h_lean435.jsonl --split all \
-  --lean-retrieve false --concurrency 20 \
+  --lean-retrieve true --python-execute true --concurrency 20 \
   --max-turns 100 --max-tool-calls 200 \
   --lean-timeout 600 --llm-timeout 1200 --task-timeout 7200 \
   --attempts-per-task 1 --retries 2 --retry-delay 5 --trace-level full \
@@ -59,8 +59,10 @@ Add `--limit 1 --concurrency 1` for a smoke run. Other inputs include
 `benchmarks/fate_x_lean435.jsonl` and `benchmarks/putnam200.jsonl`.
 Use `dvp prove --theorem-file problem.lean` for a single problem stored in a file.
 
-Enable [retrieval](#selecting-retrieval) with `--lean-retrieve true`, or
-[Python experiments](python-experiments.md) with `--python-execute true`.
+[Retrieval](#selecting-retrieval) and [Python experiments](python-experiments.md)
+are enabled by default. Explicitly use `--lean-retrieve false` or
+`--python-execute false` only when you intend to disable that tool. Missing assets,
+packages, or sandbox support mean setup is incomplete; resolve the check failure.
 Resume with the original command and output directory plus `--resume`.
 Changed code, dependencies, datasets, or execution settings require a new run;
 see [resume rules](architecture.md#resuming-runs-and-upgrading-fixed-contexts).
@@ -119,15 +121,17 @@ the final proof. It rebuilds the saved entry and imported helpers from source.
 
 ## Selecting Retrieval
 
-Retrieval uses local LeanExplore. After preparing the [assets](leanexplore.md), run:
+Retrieval uses local LeanExplore by default. After preparing the [assets](leanexplore.md)
+and [saved profile](local-configuration.md#retrieval-settings), run:
 
 ```bash
-source examples/leanexplore-local.env.sh
+source .local/leanexplore.env.sh
 python scripts/check_leanexplore_local.py
 ```
 
-Use `--lean-retrieve true` to enable it or `--lean-retrieve false` to run without
-retrieval. The template preserves your proof and model settings.
+The profile preserves your proof and model settings. A missing model, index, or
+source snapshot requires completing installation; it is not a reason to silently
+disable retrieval.
 
 ## Model Completion and Tool Format Errors
 
@@ -217,7 +221,7 @@ In a new terminal, activate `.venv` and source your [local configuration](local-
 
 | Problem | Check |
 | --- | --- |
-| `No module named dvp` | Activate the intended environment and run `python -m pip install -e .` |
+| `No module named dvp` | Activate the intended environment and run `python -m pip install -e '.[lean-explore-local,python-experiments]'` |
 | `No module named lean_explore` | Install `'.[lean-explore-local]'` in that environment |
 | Missing retrieval models or index | Check the configured asset directories and run the retrieval check script |
 | `context_status=unavailable` | Inspect `context_error` and the source snapshot's `.dvp-source.json` |

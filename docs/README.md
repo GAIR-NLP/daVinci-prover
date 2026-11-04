@@ -10,7 +10,7 @@
 | [Local configuration](local-configuration.md) | Reusable machine settings |
 | [Verification](verification.md) | Comparator setup and acceptance rules |
 | [LeanExplore](leanexplore.md) | Local retrieval data, models, and source versions |
-| [Python experiments](python-experiments.md) | Optional numerical and symbolic tools |
+| [Python experiments](python-experiments.md) | Numerical and symbolic tools with isolation checks |
 | [Architecture](architecture.md) | Code map, execution flow, artifacts, and resume |
 | [Benchmarks](../benchmarks/) | Dataset files |
 | [Release validation](release-validation.md) | Recorded installation and verification checks |

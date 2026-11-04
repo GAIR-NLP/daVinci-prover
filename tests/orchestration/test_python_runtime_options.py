@@ -37,9 +37,13 @@ def options(tmp_path, *extra):
 
 
 @pytest.mark.parametrize("parser", [build_parser, prove_parser])
-def test_cli_explicit_enable_and_disabled_default(parser, fake_executor):
+def test_cli_python_enabled_by_default_with_explicit_opt_out(parser, fake_executor):
     args = parser().parse_args([])
-    assert build_python_executor(args) is None
+    assert build_python_executor(args).identity == {
+        "backend": "test-sandbox", "timeout": 30.0,
+        "memory_bytes": 1024 * 1024 * 1024, "max_output_bytes": 12000,
+    }
+    assert build_python_executor(parser().parse_args(["--python-execute", "false"])) is None
     args = parser().parse_args(["--python-execute", "true", "--python-timeout", "7.5",
                                "--python-memory-mb", "256", "--python-max-output-bytes", "2048"])
     executor = build_python_executor(args)
@@ -58,7 +62,7 @@ def test_cli_rejects_invalid_limits(flag, value):
 
 
 def test_resume_rejects_python_enable_or_limit_changes(tmp_path, fake_executor):
-    args = options(tmp_path)
+    args = options(tmp_path, "--python-execute", "false")
     disabled = manifest.build_run_manifest(args, dataset=args.dataset, run_root=args.run_root)
     assert "python_execute" not in disabled["services"]
     args.python_execute = True
@@ -73,7 +77,7 @@ def test_resume_rejects_python_enable_or_limit_changes(tmp_path, fake_executor):
 
 
 def test_failed_python_preflight_stops_before_verification_or_tasks(tmp_path, monkeypatch, fake_executor):
-    args = options(tmp_path, "--python-execute", "true")
+    args = options(tmp_path)
     executor = build_python_executor(args)
     executor.preflight.side_effect = RuntimeError("Landlock unavailable")
     comparator = AsyncMock()

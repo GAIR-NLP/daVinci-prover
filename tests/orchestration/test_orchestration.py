@@ -22,7 +22,8 @@ def options(tmp_path: Path, *extra: str):
         dataset.write_text(json.dumps({"task_id": "sample", "statement": "theorem t : True := by trivial"}) + "\n")
     return build_parser().parse_args([
         "--dataset", str(dataset), "--model", "mock", "--run-root", str(tmp_path / "run"),
-        "--lean-retrieve", "false", "--trace-level", "off", "--retry-delay", "0", *extra,
+        "--lean-retrieve", "false", "--python-execute", "false",
+        "--trace-level", "off", "--retry-delay", "0", *extra,
     ])
 
 

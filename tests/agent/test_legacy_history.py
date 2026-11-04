@@ -151,7 +151,9 @@ def test_legacy_grades_only_after_all_development_calls_and_visible_stop(tmp_pat
 def test_policy_is_recorded_and_cannot_change_on_resume(tmp_path):
     dataset = tmp_path / "tasks.jsonl"
     dataset.write_text(json.dumps({"task_id": "t", "statement": STATEMENT}) + "\n")
-    args = eval_parser().parse_args(["--dataset", str(dataset), "--model", "test"])
+    args = eval_parser().parse_args([
+        "--dataset", str(dataset), "--model", "test", "--python-execute", "false",
+    ])
     args.target_workspace = None
     current = build_run_manifest(args, dataset=dataset, run_root=tmp_path / "run")
     args.history_policy = "legacy"

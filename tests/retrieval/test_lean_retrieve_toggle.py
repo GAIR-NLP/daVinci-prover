@@ -315,7 +315,7 @@ def test_standalone_cli_passes_switch_to_episode(monkeypatch, services, tmp_path
     args = cli.build_parser().parse_args([
         "--theorem", THEOREM, "--model", "mock",
         "--run-dir", str(tmp_path / "standalone"), "--trace-level", "off",
-        "--lean-retrieve", str(enabled).lower(),
+        "--lean-retrieve", str(enabled).lower(), "--python-execute", "false",
     ])
     assert asyncio.run(cli.async_main(args)) == 1
     preflight.assert_awaited_once_with(
@@ -331,7 +331,7 @@ def test_manifest_and_resume_record_capability_change(monkeypatch, tmp_path):
     dataset.write_text('{}\n')
 
     def manifest(options):
-        args = build_eval_parser().parse_args(["--model", "mock", *options])
+        args = build_eval_parser().parse_args(["--model", "mock", "--python-execute", "false", *options])
         return build_run_manifest(args, dataset=dataset, run_root=tmp_path, rows=())
 
     default = manifest([])

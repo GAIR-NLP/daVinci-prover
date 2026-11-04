@@ -2,7 +2,7 @@
 
 [Back to documentation](README.md)
 
-LeanExplore runs locally on the proof machine using a pinned snapshot, BM25/vector search, a reranker, and source context. Retrieval provides references; Comparator validates proofs.
+LeanExplore is enabled by default and runs locally on the proof machine using a pinned snapshot, BM25/vector search, a reranker, and source context. Retrieval provides references; Comparator validates proofs.
 
 ## Enabling Lean 4.35 retrieval
 
@@ -12,14 +12,15 @@ From the repository root in your [DVP environment](installation.md#python-enviro
 python -m pip install -e '.[lean-explore-local]'
 ```
 
-Prepare the [Lean workspace](installation.md#lean-and-mathlib) and [download the assets](#preparing-models-and-source-on-a-new-machine), then enable and check retrieval:
+Prepare the [Lean workspace](installation.md#lean-and-mathlib), [download the assets](#preparing-models-and-source-on-a-new-machine), and create the [saved profile](local-configuration.md#proof-settings). Then check retrieval:
 
 ```bash
-source examples/leanexplore-local.env.sh
+source .local/proof.env.sh
+source .local/leanexplore.env.sh
 python scripts/check_leanexplore_local.py
 ```
 
-Use `--lean-retrieve true` in your proof or evaluation command. Use `--lean-retrieve false` when retrieval assets are unavailable. Do not also pass `--retrieve-index`: an explicit JSONL index overrides the selected backend.
+Proof and evaluation commands enable retrieval by default. Missing assets mean installation is incomplete; finish the downloads and checks before running. Use `--lean-retrieve false` only for an intentional run without retrieval. Do not also pass `--retrieve-index`: an explicit JSONL index overrides the selected backend.
 
 The template checks workspace/snapshot compatibility, enables offline model inference, and preserves your model API and Comparator settings. The check script exercises name and natural-language queries with networking blocked; success prints `Local retrieval passed; network attempts: 0`. Add `--output analysis/leanexplore-local-smoke.json` to save the report. The upstream `lean-explore search` CLI calls the website and does not test DVP's local configuration.
 
@@ -33,7 +34,7 @@ The template checks workspace/snapshot compatibility, enables offline model infe
 
 The database includes generated descriptions. Deployment only downloads assets and runs the embedding/reranker models; it does not regenerate descriptions.
 
-Copy `examples/leanexplore-local.env.sh` into ignored `.local/` for custom paths, or set its supported overrides before sourcing it:
+Keep a copy of `examples/leanexplore-local.env.sh` at ignored `.local/leanexplore.env.sh`. Set its supported overrides before sourcing it, or edit that private copy:
 
 | Variable | Default / purpose |
 | --- | --- |
@@ -98,7 +99,7 @@ unset HF_HUB_OFFLINE TRANSFORMERS_OFFLINE
 python "$DVP_RELEASE_DIR/fetch_models.py" --models-dir "$DVP_ROOT/data/leanexplore-models"
 ```
 
-The download helper fetches pinned Hugging Face revisions and verifies file sizes and SHA256 values. The source archive supplies versioned context files; it does not replace the compiled Mathlib proof workspace. After downloading, source the local template and run the [local check](#enabling-lean-435-retrieval).
+The download helper fetches pinned Hugging Face revisions and verifies file sizes and SHA256 values. The source archive supplies versioned context files; it does not replace the compiled Mathlib proof workspace. After downloading, source `.local/leanexplore.env.sh` and run the [local check](#enabling-lean-435-retrieval).
 
 ## Search results and source versions
 

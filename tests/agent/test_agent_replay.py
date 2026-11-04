@@ -684,7 +684,9 @@ def test_pre_finalization_policy_manifest_cannot_resume_current_run(tmp_path, ol
 
     dataset = tmp_path / "tasks.jsonl"
     dataset.write_text(json.dumps({"task_id": "replay", "theorem_statement": THEOREM}) + "\n")
-    args = build_parser().parse_args(["--model", "mock", "--lean-retrieve", "false"])
+    args = build_parser().parse_args([
+        "--model", "mock", "--lean-retrieve", "false", "--python-execute", "false",
+    ])
     args.target_workspace = None
     current = build_run_manifest(args, dataset=dataset, run_root=tmp_path / "run")
     old = deepcopy(current)

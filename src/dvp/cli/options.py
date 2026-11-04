@@ -65,8 +65,8 @@ def _parse_positive_float(value: str) -> float:
 
 def add_python_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
-        "--python-execute", type=_parse_bool, default=False,
-        help="Enable local Python experiments with Landlock and seccomp (default: false).",
+        "--python-execute", type=_parse_bool, default=True,
+        help="Enable local Python experiments with Landlock and seccomp (default: true; use false to disable).",
     )
     parser.add_argument(
         "--python-timeout", type=_parse_positive_float, default=30.0,

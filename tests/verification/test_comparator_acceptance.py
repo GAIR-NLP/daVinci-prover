@@ -193,7 +193,7 @@ def test_comparator_policy_cannot_resume_previous_acceptance_semantics(tmp_path,
     dataset.write_text('{"task_id":"task","statement":"theorem t : True := by sorry"}\n')
     args = build_parser().parse_args([
         "--dataset", str(dataset), "--model", "mock",
-        "--lean-retrieve", "false", "--run-root", str(tmp_path / "run"),
+        "--lean-retrieve", "false", "--python-execute", "false", "--run-root", str(tmp_path / "run"),
     ])
     current = build_run_manifest(args, dataset=dataset, run_root=args.run_root)
     previous = deepcopy(current)

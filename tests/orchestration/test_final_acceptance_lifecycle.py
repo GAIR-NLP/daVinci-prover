@@ -27,7 +27,7 @@ def setup_lifecycle(tmp_path, monkeypatch, *, accepted=True, saved=PROOF,
     args = build_parser().parse_args([
         "--model", "mock", "--run-root", str(tmp_path / "runs"),
         "--target-workspace", str(tmp_path / "mathlib"),
-        "--lean-retrieve", "false", "--trace-level", "full",
+        "--lean-retrieve", "false", "--python-execute", "false", "--trace-level", "full",
         "--attempts-per-task", "1", "--retries", "2", "--retry-delay", "0",
         "--max-turns", "200", "--max-tool-calls", "800",
     ])

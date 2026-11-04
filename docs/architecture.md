@@ -43,8 +43,10 @@ Replay uses the same episode interface.
 
 ## Tools and Run Artifacts
 
-The [README](../README.md#harness-design) lists the tools. Retrieval can be disabled;
-Python requires explicit opt-in. Calls execute in order. Consecutive file writes
+The [README](../README.md#harness-design) lists the tools. The CLI enables local
+retrieval and Python experiments by default; either can be explicitly disabled.
+Programmatic callers supply a [Python executor](python-experiments.md#programmatic-use).
+Calls execute in order. Consecutive file writes
 and edits defer compilation until the group ends, checking each changed Lean
 destination once. See [editing](usage.md#editing-and-automatic-checks).
 
@@ -85,7 +87,8 @@ See [verification](verification.md) for allowed axioms, runtime registration, an
 
 ## Installation, Entry Points, and Paths
 
-Install from source with `pip install -e .`. Commands use `dvp`; imports use `dvp.*`.
+Install from source with `pip install -e '.[lean-explore-local,python-experiments]'`.
+Commands use `dvp`; imports use `dvp.*`.
 Lean helper programs in `verification/resources/` ship with the package.
 
 | Directory | Purpose |

@@ -37,7 +37,9 @@ def test_cli_selects_both_policies_and_preserves_other_budgets(parser_factory):
 def test_manifest_and_conversation_record_policy_and_resume_rejects_switch(tmp_path):
     dataset = tmp_path / "tasks.jsonl"
     dataset.write_text('{"task_id":"t","statement":"example : True := by sorry"}\n')
-    args = eval_parser().parse_args(["--dataset", str(dataset), "--model", "test"])
+    args = eval_parser().parse_args([
+        "--dataset", str(dataset), "--model", "test", "--python-execute", "false",
+    ])
     args.target_workspace = None
     args.retain_truncated_thinking = True
     retained = build_run_manifest(args, dataset=dataset, run_root=tmp_path / "run")

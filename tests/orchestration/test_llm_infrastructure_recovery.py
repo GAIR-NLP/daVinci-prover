@@ -21,7 +21,7 @@ auth_error = partial(AuthenticationError, model="mock", llm_provider="openai")
 
 def setup_attempts(tmp_path, monkeypatch, outcomes):
     args = build_parser().parse_args([
-        "--model", "mock", "--run-root", str(tmp_path / "run"),
+        "--model", "mock", "--run-root", str(tmp_path / "run"), "--python-execute", "false",
         "--target-workspace", str(tmp_path), "--trace-level", "sft",
         "--attempts-per-task", "1", "--retries", "2", "--retry-delay", "0",
     ])

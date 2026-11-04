@@ -33,7 +33,7 @@ def test_task_retry_and_resume_keep_affinity_and_record_actual_header(tmp_path, 
     run_root = tmp_path / "run"
     root_args = [root_option, str(run_root)] if root_option else []
     args = build_parser().parse_args([
-        "--model", "mock", *root_args,
+        "--model", "mock", "--python-execute", "false", *root_args,
         "--target-workspace", str(tmp_path), "--trace-level", "sft",
         "--retries", "1", "--retry-delay", "0",
     ])

@@ -2,7 +2,7 @@
 
 [Back to documentation](README.md)
 
-Run these commands in Bash from the source checkout. Set up Python, the pinned Lean / Mathlib workspace, and Comparator before running proofs.
+Run these commands in Bash from the source checkout. Set up Python, the pinned Lean / Mathlib workspace, Comparator, and local retrieval before running proofs. Retrieval and Python experiments are enabled by default.
 
 For installation by a coding agent, use the [agent instructions](agent-install.md).
 
@@ -15,7 +15,8 @@ For installation by a coding agent, use the [agent instructions](agent-install.m
 | Mathlib | Commit `56a005855ea17e0b0958f73ec801ae140b0a1679` |
 | Verification | Lean's bundled `lake comparator`, `leanexport`, and `leanchecker` |
 | Model | Tool-calling API supported by LiteLLM |
-| Optional retrieval | LeanExplore **1.3.x**, snapshot `20261020_060431`, and matching models and sources |
+| Retrieval | LeanExplore **1.3.x**, snapshot `20261020_060431`, and matching models and sources |
+| Python experiments | NumPy, SymPy, mpmath, and working Landlock + seccomp isolation |
 
 ## Python environment
 
@@ -23,7 +24,7 @@ On Ubuntu / Debian, install missing system packages; omit `sudo` when running as
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y python3 python3-venv python3-pip git curl ca-certificates build-essential ripgrep bubblewrap libseccomp2
+sudo apt-get install -y python3 python3-venv python3-pip git curl ca-certificates build-essential ripgrep bubblewrap libseccomp2 libstdc++6 libgcc-s1 zlib1g
 ```
 
 Use a dedicated environment with Python 3.12 and its `venv` module available:
@@ -33,21 +34,13 @@ cd /path/to/daVinci-prover
 export DVP_ROOT="$PWD"
 python3.12 -m venv .venv
 source .venv/bin/activate
-python -m pip install -e .
+python -m pip install -e '.[lean-explore-local,python-experiments]'
 dvp --help
 ```
 
 Keep this shell open for the remaining steps. In a new shell, set `DVP_ROOT` and reactivate `.venv`. An existing DVP-only Conda environment also works. Editable installation needs no `PYTHONPATH` override.
 
-The base install includes LiteLLM for model calls. Optional packages:
-
-| Feature | Install |
-| --- | --- |
-| NumPy, SymPy, and mpmath experiments | `pip install -e '.[python-experiments]'` |
-| Local LeanExplore | `pip install -e '.[lean-explore-local]'` |
-| Tests | `pip install -e '.[test]'` |
-
-Dependency ranges are in [`pyproject.toml`](../pyproject.toml). For a specific CPU / CUDA PyTorch build, install it in this environment before the local retrieval extra. Run the [retrieval check](leanexplore.md) or [Python preflight](python-experiments.md) after configuring that feature.
+This installs LiteLLM, local LeanExplore dependencies, NumPy, SymPy, and mpmath. Dependency ranges are in [`pyproject.toml`](../pyproject.toml). For a specific CPU / CUDA PyTorch build, install it in this environment before the combined install command above. Tests additionally require `pip install -e '.[test]'`.
 
 ## Lean and Mathlib
 
@@ -88,7 +81,17 @@ Compiled artifacts live in each package's `.lake/build/`; dependencies live in `
 ## Retrieval assets and Comparator
 
 1. [Register Comparator](verification.md#installing-the-lean-435-verifier).
-2. Optionally configure [local retrieval](leanexplore.md). Use `--lean-retrieve false` to disable retrieval.
-3. Save [local settings](local-configuration.md) and follow the [usage examples](usage.md#quick-start).
+2. Download the [LeanExplore database, indexes, source trees, and model weights](leanexplore.md#preparing-models-and-source-on-a-new-machine). Verify the snapshot and workspace versions match; package installation alone does not supply these assets.
+3. Save proof settings in `.local/proof.env.sh` and retrieval settings in `.local/leanexplore.env.sh`, following [local configuration](local-configuration.md).
+4. Activate the environment, load both profiles, and run both checks:
+
+```bash
+source .local/proof.env.sh
+source .local/leanexplore.env.sh
+python scripts/check_leanexplore_local.py
+python -m dvp.cli.check_python
+```
+
+Both checks must pass before using the [Quick start](../README.md#quick-start). Missing assets or a failed Python sandbox check mean setup is incomplete. Only explicitly reduced runs should use `--lean-retrieve false` or `--python-execute false`.
 
 On another machine, create a fresh Python environment, prepare the same Lean / Mathlib workspace, and register Comparator again. Runtime manifests contain absolute paths. Transfer retrieval assets separately; virtual environments and machine-specific symlinks are not portable.
