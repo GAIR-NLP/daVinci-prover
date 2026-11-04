@@ -12,6 +12,12 @@ From the repository root in your [DVP environment](installation.md#python-enviro
 python -m pip install -e '.[lean-explore-local]'
 ```
 
+The pinned Qwen3 embedding and reranker models have passed the offline retrieval check with Transformers **4.57.1** and **5.16.1**, using Sentence Transformers **5.7.0**. To select the tested 5.x version:
+
+```bash
+python -m pip install -e '.[lean-explore-local,python-experiments]' 'transformers==5.16.1'
+```
+
 Prepare the [Lean workspace](installation.md#lean-and-mathlib), [download the assets](#preparing-models-and-source-on-a-new-machine), and create the [saved profile](local-configuration.md#proof-settings). Then check retrieval:
 
 ```bash
