@@ -1,4 +1,10 @@
 # daVinci-Prover
+<div align="left">
+
+[![arXiv](https://img.shields.io/badge/arXiv-xxxx.xxxxx-b31b1b.svg?style=for-the-badge)]()
+[![Data](https://img.shields.io/badge/Data-4d5eff?style=for-the-badge&logo=huggingface&logoColor=ffffff&labelColor)]()
+[![Model](https://img.shields.io/badge/Model-4d5eff?style=for-the-badge&logo=huggingface&logoColor=ffffff&labelColor)]()
+</div>
 
 A single-agent Lean theorem-proving harness with LiteLLM model calls, local LeanExplore retrieval, compiler feedback, and final acceptance through Lean's **Comparator**.
 
