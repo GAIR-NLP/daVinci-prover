@@ -26,10 +26,48 @@ pip install -e .
 dvp --help
 ```
 
-Prepare the pinned [Lean / Mathlib workspace](docs/installation.md#lean-and-mathlib),
-[register Comparator](docs/verification.md#installing-the-lean-435-verifier),
-then follow the [quick start](docs/usage.md#quick-start).
+Prepare the pinned [Lean / Mathlib workspace](docs/installation.md#lean-and-mathlib)
+and [register Comparator](docs/verification.md#installing-the-lean-435-verifier).
 Optional [local retrieval](docs/leanexplore.md) uses the published LeanExplore 4.35 snapshot.
+
+## Quick start
+
+After setup, configure the [DeepSeek API](https://api-docs.deepseek.com/) from the repository root:
+
+```bash
+source examples/proof.env.sh
+export OPENAI_API_KEY="your-deepseek-api-key"
+export DAVINCI_MODEL=deepseek-flash
+export OPENAI_BASE_URL=https://api.deepseek.com
+```
+
+**Prove one theorem:**
+
+```bash
+dvp prove \
+  --thinking enabled --reasoning-effort high \
+  --theorem $'import Mathlib\ntheorem demo (n : Nat) : n + 0 = n := by sorry' \
+  --lean-retrieve false \
+  --max-turns 20 --max-tokens 16384 --lean-timeout 120 \
+  --trace-level full
+```
+
+The proof, verdict, and trajectory are saved under `runs/dvp_<timestamp>/`.
+
+**Evaluate all 200 Putnam problems:**
+
+```bash
+dvp eval \
+  --dataset benchmarks/putnam200.jsonl --split all \
+  --thinking enabled --reasoning-effort high \
+  --lean-retrieve false --concurrency 20 \
+  --max-turns 200 --max-tool-calls 800 --max-tokens 32768 \
+  --lean-timeout 1800 --llm-timeout 1800 --task-timeout 14400 \
+  --attempts-per-task 1 --retries 2 --trace-level full \
+  --run-root "runs/putnam200_$(date +%Y%m%d_%H%M%S)"
+```
+
+The run directory contains `summary.json`, `results.jsonl`, and per-task traces under `tasks/`. Enable `--lean-retrieve true` after configuring [local retrieval](docs/leanexplore.md). See [usage](docs/usage.md) for resume and other options.
 
 ## Harness design
 
