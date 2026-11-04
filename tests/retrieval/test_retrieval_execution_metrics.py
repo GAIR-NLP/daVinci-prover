@@ -21,7 +21,6 @@ def test_pipeline_settings_separate_shared_retrievers(monkeypatch):
     monkeypatch.setattr(backend, "LeanExploreRetriever", create)
     monkeypatch.setattr(backend, "_RETRIEVER_CACHE", {})
     monkeypatch.setenv("DAVINCI_RETRIEVE_BACKEND", "lean_explore")
-    monkeypatch.setenv("DAVINCI_LEANEXPLORE_BACKEND", "local")
     monkeypatch.setenv("DAVINCI_LEANEXPLORE_LOCAL_CONCURRENCY", "2")
     monkeypatch.setenv("DAVINCI_LEANEXPLORE_LOCAL_MAX_PENDING", "30")
     first = backend.get_cached_retriever()

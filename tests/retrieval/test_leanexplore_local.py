@@ -7,6 +7,7 @@ import threading
 import time
 from types import ModuleType, SimpleNamespace
 
+import httpx
 import pytest
 
 from dvp.toolkits.retrieval import backend, explore
@@ -82,7 +83,7 @@ def sdk(monkeypatch):
     def unexpected_http(**_kwargs):
         pytest.fail("Local retrieval must never create an HTTP client for source context")
 
-    monkeypatch.setattr(explore.httpx, "AsyncClient", unexpected_http)
+    monkeypatch.setattr(httpx, "AsyncClient", unexpected_http)
     yield state
     for runtime in state.runtimes:
         asyncio.run(runtime.aclose())
@@ -105,34 +106,33 @@ def test_local_models_pass_existing_resolved_directories_to_sdk(sdk, tmp_path):
     reranker = tmp_path / "reranker"
     embedding.mkdir()
     reranker.mkdir()
-    LeanExploreRetriever(backend="local", embedding_model=str(embedding), reranker_model=str(reranker))
+    LeanExploreRetriever(embedding_model=str(embedding), reranker_model=str(reranker))
     assert sdk.options == [{
         "use_local_data": False,
         "embedding_model_name": str(embedding), "reranker_model_name": str(reranker),
     }]
 
 
-def test_default_constructor_and_backend_selection_use_local_without_api(sdk, monkeypatch):
-    assert LeanExploreRetriever().backend == "local"
+def test_default_constructor_and_backend_selection_use_local_sdk(sdk, monkeypatch):
+    assert LeanExploreRetriever().client.engine is not None
     monkeypatch.setattr(backend, "_RETRIEVER_CACHE", {})
     monkeypatch.delenv("DAVINCI_RETRIEVE_BACKEND", raising=False)
-    monkeypatch.delenv("DAVINCI_LEANEXPLORE_BACKEND", raising=False)
     for name in ("EMBEDDING_MODEL", "RERANKER_MODEL", "SOURCE_DIR"):
         monkeypatch.delenv("DAVINCI_LEANEXPLORE_" + name, raising=False)
-    assert backend.get_cached_retriever().backend == "local"
+    assert backend.get_cached_retriever().client.engine is not None
     assert len(sdk.options) == 2
 
 
 @pytest.mark.parametrize("option", ["embedding_model", "reranker_model"])
 def test_missing_configured_model_fails_before_sdk_can_download(sdk, tmp_path, option):
     with pytest.raises(FileNotFoundError, match="local model directory"):
-        LeanExploreRetriever(backend="local", **{option: str(tmp_path / "missing")})
+        LeanExploreRetriever(**{option: str(tmp_path / "missing")})
     assert not sdk.options
 
 
 def test_local_context_uses_matching_versioned_source_and_keeps_retrieval_fields(sdk, sources):
     source_dir, _ = sources
-    client = LeanExploreRetriever(backend="local", include_context=True, source_dir=source_dir)
+    client = LeanExploreRetriever(include_context=True, source_dir=source_dir)
     result = asyncio.run(client.search(lean_name="Example.sample"))[0]
     assert result["context_status"] == "available"
     assert "Group G" in json.dumps(result["context"])
@@ -180,7 +180,7 @@ def test_local_context_failures_keep_hits_without_remote_fallback(sdk, sources, 
     elif failure == "outside_span":
         path.write_text("short\n")
 
-    client = LeanExploreRetriever(backend="local", include_context=True, source_dir=source_dir)
+    client = LeanExploreRetriever(include_context=True, source_dir=source_dir)
     result = asyncio.run(client.search(lean_name="Example.sample"))[0]
     assert result["fullname"] == "Example.sample"
     assert result["context_status"] == "unavailable"
@@ -200,7 +200,7 @@ def test_local_context_rejects_paths_symlinked_outside_versioned_root(sdk, sourc
         outside = tmp_path / "outside"
         path.rename(outside)
         path.symlink_to(outside)
-    client = LeanExploreRetriever(backend="local", include_context=True, source_dir=source_dir)
+    client = LeanExploreRetriever(include_context=True, source_dir=source_dir)
     result = asyncio.run(client.search(lean_name="Example.sample"))[0]
     assert result["context_status"] == "unavailable"
     assert "outside" in result["context_error"]
@@ -209,7 +209,7 @@ def test_local_context_rejects_paths_symlinked_outside_versioned_root(sdk, sourc
 def test_local_generated_declarations_do_not_use_generator_context(sdk, sources):
     source_dir, _ = sources
     sdk.hits = [hit(name="Example.other")]
-    client = LeanExploreRetriever(backend="local", include_context=True, source_dir=source_dir)
+    client = LeanExploreRetriever(include_context=True, source_dir=source_dir)
     result = asyncio.run(client.search(lean_name="Example.other"))[0]
     assert result["signature_status"] == "name_mismatch"
     assert result["context_status"] == "unavailable"
@@ -218,7 +218,7 @@ def test_local_generated_declarations_do_not_use_generator_context(sdk, sources)
 
 def test_local_search_bounds_pipelines_without_deduplicating_calls_across_event_loops(sdk):
     sdk.delay = 0.01
-    client = LeanExploreRetriever(backend="local", include_context=False)
+    client = LeanExploreRetriever(include_context=False)
 
     async def concurrent_searches():
         return await asyncio.gather(*(client.search(lean_name="Example.sample") for _ in range(4)))
@@ -231,7 +231,7 @@ def test_local_search_bounds_pipelines_without_deduplicating_calls_across_event_
 
 def test_cancelling_local_search_keeps_gate_until_background_inference_finishes(sdk):
     sdk.delay = 0.05
-    client = LeanExploreRetriever(backend="local", include_context=False, local_concurrency=1)
+    client = LeanExploreRetriever(include_context=False, local_concurrency=1)
 
     async def cancel_then_search():
         first = asyncio.create_task(client.search(lean_name="Example.sample"))
@@ -251,7 +251,7 @@ def test_cancelling_local_search_keeps_gate_until_background_inference_finishes(
 
 
 def test_cancelling_queued_query_does_not_release_another_queries_gate(sdk):
-    client = LeanExploreRetriever(backend="local", include_context=False, local_concurrency=1)
+    client = LeanExploreRetriever(include_context=False, local_concurrency=1)
     sdk.delay = 0.05
 
     async def run():
@@ -273,7 +273,7 @@ def test_cancelling_queued_query_does_not_release_another_queries_gate(sdk):
 
 
 def test_cancelled_caller_retains_worker_until_failure_then_releases_gate(sdk):
-    client = LeanExploreRetriever(backend="local", include_context=False, local_concurrency=1)
+    client = LeanExploreRetriever(include_context=False, local_concurrency=1)
     original_search = client.client.search
     failures = []
 
@@ -302,7 +302,7 @@ def test_cancelled_caller_retains_worker_until_failure_then_releases_gate(sdk):
 
 
 def test_local_bm25_uses_the_same_bounded_pipeline(sdk):
-    client = LeanExploreRetriever(backend="local", include_context=False, bm25_only=True,
+    client = LeanExploreRetriever(include_context=False, bm25_only=True,
                                   local_concurrency=2)
 
     async def bm25(**kwargs):
@@ -329,7 +329,6 @@ def test_configured_local_paths_are_forwarded_and_separate_shared_instances(monk
     monkeypatch.setattr(backend, "LeanExploreRetriever", create)
     monkeypatch.setattr(backend, "_RETRIEVER_CACHE", {})
     monkeypatch.setenv("DAVINCI_RETRIEVE_BACKEND", "lean_explore")
-    monkeypatch.setenv("DAVINCI_LEANEXPLORE_BACKEND", "local")
     for name, folder in [
         ("EMBEDDING_MODEL", "embedding"), ("RERANKER_MODEL", "reranker"), ("SOURCE_DIR", "sources"),
     ]:

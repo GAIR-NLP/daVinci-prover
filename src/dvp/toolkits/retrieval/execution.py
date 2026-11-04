@@ -285,8 +285,7 @@ async def _lean_retrieve_configured_backend(
             "error": (
                 f"{type(exc).__name__}: {exc}. Retrieval backend is "
                 f"{backend!r}. Install and configure LeanExplore local data "
-                "(python -m pip install -e '.[lean-explore-local]') or its API backend "
-                "(python -m pip install -e '.[lean-explore]'). For JSONL search, provide "
+                "(python -m pip install -e '.[lean-explore-local]'). For JSONL search, provide "
                 "--retrieve-index or set DAVINCI_RETRIEVE_BACKEND=jsonl and "
                 "DAVINCI_RETRIEVE_INDEX."
             ),

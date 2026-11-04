@@ -24,12 +24,6 @@ python-experiments = [
     "mpmath>=1.3,<2",
 ]
 # Keep the SDK's internal API and BM25 index loader within their current series.
-lean-explore = [
-    "lean-explore>=1.3.0,<1.4",
-    "faiss-cpu>=1.15.1,<2",
-    "numpy>=2.4.0,<3",
-    "bm25s>=0.3.13,<0.4",
-]
 lean-explore-local = [
     "lean-explore[local]>=1.3.0,<1.4",
     "torch>=2.9.1,<3",
@@ -38,18 +32,6 @@ lean-explore-local = [
     "faiss-cpu>=1.15.1,<2",
     "numpy>=2.4.0,<3",
     "bm25s>=0.3.13,<0.4",
-]
-lean-explore-server = [
-    "lean-explore[local]>=1.3.0,<1.4",
-    "torch>=2.9.1,<3",
-    "transformers>=4.57.1,<5",
-    "sentence-transformers>=5.7.0,<6",
-    "faiss-cpu>=1.15.1,<2",
-    "numpy>=2.4.0,<3",
-    "bm25s>=0.3.13,<0.4",
-    "fastapi>=0.128.0,<1",
-    "pydantic>=2.7,<3",
-    "uvicorn>=0.40.0,<1",
 ]
 test = [
     "pytest>=7",

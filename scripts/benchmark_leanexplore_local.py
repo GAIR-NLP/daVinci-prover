@@ -179,10 +179,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.repetitions < 1 or not 1 <= args.limit <= 50 or any(n < 1 for n in args.concurrency):
         parser.error("Repetitions and concurrency must be positive; limit must be between 1 and 50")
     backend = os.getenv("DAVINCI_RETRIEVE_BACKEND", "lean_explore").lower()
-    if backend not in {"lean_explore", "lean-explore", "leanexplore"} or os.getenv(
-        "DAVINCI_LEANEXPLORE_BACKEND", "local"
-    ).lower() != "local":
-        parser.error("This benchmark requires DAVINCI_RETRIEVE_BACKEND=lean_explore and DAVINCI_LEANEXPLORE_BACKEND=local")
+    if backend not in {"lean_explore", "lean-explore", "leanexplore"}:
+        parser.error("This benchmark requires DAVINCI_RETRIEVE_BACKEND=lean_explore")
 
     os.environ.update(HF_HUB_OFFLINE="1", TRANSFORMERS_OFFLINE="1", HF_HUB_DISABLE_TELEMETRY="1")
     from dvp.toolkits.retrieval.backend import get_cached_retriever
@@ -196,10 +194,11 @@ def main(argv: list[str] | None = None) -> int:
                                      repetitions=args.repetitions, limit=args.limit)
             report["configuration"] = {
                 name: getattr(retriever, name, None) for name in (
-                    "backend", "bm25_only", "bm25_k", "rerank_top", "packages",
+                    "bm25_only", "bm25_k", "rerank_top", "packages",
                     "include_context", "local_concurrency", "local_max_pending",
                 )
             }
+            report["configuration"]["backend"] = "local"
             report["configuration"]["snapshot"] = os.getenv("LEAN_EXPLORE_VERSION")
             return report
         finally:

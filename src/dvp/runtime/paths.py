@@ -20,7 +20,7 @@ def project_root() -> Path:
             if (
                 (candidate / "pyproject.toml").is_file()
                 and (candidate / "src" / "dvp" / "__init__.py").is_file()
-                and (candidate / "inputs").is_dir()
+                and (candidate / "benchmarks").is_dir()
             ):
                 return candidate
     return Path.cwd().resolve()
@@ -28,7 +28,7 @@ def project_root() -> Path:
 
 REPOSITORY_ROOT = project_root()
 SOURCE_ROOT = REPOSITORY_ROOT / "src"
-INPUTS_ROOT = REPOSITORY_ROOT / "inputs"
+BENCHMARKS_ROOT = REPOSITORY_ROOT / "benchmarks"
 DATA_ROOT = REPOSITORY_ROOT / "data"
 DEFAULT_TARGET_WORKSPACE = REPOSITORY_ROOT / "runtime" / "mathlib4-4.35"
 

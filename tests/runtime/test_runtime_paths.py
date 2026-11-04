@@ -30,7 +30,7 @@ def test_installed_package_finds_checkout_from_a_subdirectory(monkeypatch, tmp_p
     package.mkdir(parents=True)
     (package / "__init__.py").write_text("")
     (checkout / "pyproject.toml").write_text('[project]\nname = "dvp"\n')
-    (checkout / "inputs").mkdir()
+    (checkout / "benchmarks").mkdir()
     working_dir = checkout / "analysis" / "nested"
     working_dir.mkdir(parents=True)
     installed = tmp_path / "site-packages" / "dvp" / "runtime" / "paths.py"
@@ -50,3 +50,11 @@ def test_installed_package_outside_a_checkout_uses_current_directory(monkeypatch
     monkeypatch.chdir(working_dir)
 
     assert paths.project_root() == working_dir
+
+
+def test_default_evaluation_dataset_exists_after_directory_move():
+    from dvp.cli.evaluate import build_parser
+
+    dataset = build_parser().parse_args([]).dataset
+    assert dataset == ROOT / "benchmarks" / "fate_h_lean435.jsonl"
+    assert dataset.is_file()

@@ -7,7 +7,7 @@ import asyncio
 from pathlib import Path
 from typing import Sequence
 from dvp.cli.options import add_runtime_options
-from dvp.runtime.paths import INPUTS_ROOT
+from dvp.runtime.paths import BENCHMARKS_ROOT
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -16,7 +16,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--dataset",
         type=Path,
-        default=INPUTS_ROOT / "fate" / "fate_h_lean435.jsonl",
+        default=BENCHMARKS_ROOT / "fate_h_lean435.jsonl",
         help="JSON/JSONL task file (defaults to this repository's Lean 4.35 FATE-H set).",
     )
     parser.add_argument(

@@ -1,22 +1,19 @@
 # DVP Documentation
 
-[Back to the project README](../README.md)
+[Project README](../README.md)
 
-| Task | Guide |
+| Guide | Contents |
 | --- | --- |
-| Set up a new machine | [Installation and migration](installation.md) |
-| Configure a model API, prove a theorem, or evaluate a dataset | [Quick start](usage.md#quick-start) |
-| Save machine-specific paths and credentials | [Local configuration](local-configuration.md) |
-| Troubleshoot evaluation | [Usage and troubleshooting](usage.md) |
-| Configure retrieval, download models, or rebuild data and indexes | [Local LeanExplore retrieval](leanexplore.md) |
-| Host retrieval on a separate machine | [Retrieval server](leanexplore-server.md) |
-| Install Comparator and choose a verification mode | [Lean checks and Comparator](verification.md) |
-| Run isolated local Python experiments | [Python experiments](python-experiments.md) |
-| Browse the available datasets | [Dataset inputs](../inputs/) |
-| Upgrade fixed contexts or resume runs | [Resume rules](architecture.md#resuming-runs-and-upgrading-fixed-contexts) |
-| Find code and understand state, artifacts, and compatibility | [Architecture](architecture.md) |
-| Inspect tools, saved results, and scoring | [Tools and run artifacts](architecture.md#tools-and-run-artifacts) |
-| Rebuild retrieval data or diagnose model services | [Maintenance tools](../tools/README.md) |
-| Review source-release checks and a real accepted proof | [Release validation](release-validation.md) |
+| [Installation](installation.md) | Python, Lean, Mathlib, and cache setup |
+| [Usage](usage.md) | Model configuration, proofs, evaluation, and troubleshooting |
+| [Local configuration](local-configuration.md) | Reusable machine settings |
+| [Verification](verification.md) | Comparator setup and acceptance rules |
+| [LeanExplore](leanexplore.md) | Local retrieval data, models, and source versions |
+| [Python experiments](python-experiments.md) | Optional numerical and symbolic tools |
+| [Architecture](architecture.md) | Code map, execution flow, artifacts, and resume |
+| [Benchmarks](../benchmarks/) | Dataset files |
+| [Release validation](release-validation.md) | Recorded installation and verification checks |
 
-Run commands from the repository root unless stated otherwise. `scripts/` contains setup, retrieval checks, and server startup; `tools/` contains optional data-build and diagnostic utilities. `examples/` contains portable configuration templates and `inputs/` contains tasks. Machine configuration belongs in ignored `.local/`; downloaded assets, runtimes, results, and reports stay in ignored `data/`, `runtime/`, `runs/`, `analysis/`, and `logs/` directories. These local files are not included in a source checkout.
+Run commands from the repository root with the DVP environment activated.
+Keep machine settings in ignored `.local/`; runtimes, data, and run outputs are
+installed or generated separately.

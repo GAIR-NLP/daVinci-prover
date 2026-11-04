@@ -1,4 +1,4 @@
-"""LeanExplore API/local search and normalized declaration results."""
+"""Local LeanExplore search and normalized declaration results."""
 
 from __future__ import annotations
 
@@ -10,9 +10,6 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlsplit
 
-import httpx
-
-from dvp.toolkits.retrieval.explore_retry import retry_request
 from dvp.toolkits.retrieval.explore_source import declaration_context, declaration_evidence
 from dvp.toolkits.retrieval.explore_local import LocalSearchRuntime, guarded_engine_type
 
@@ -21,7 +18,7 @@ _MAX_SOURCE_BYTES = 2 * 1024 * 1024
 
 
 def _source_location(source_link: str) -> dict[str, str]:
-    """Accept only versioned GitHub source locations, never arbitrary fetch URLs."""
+    """Identify the versioned local source corresponding to an indexed link."""
     try:
         url = urlsplit(source_link)
     except ValueError:
@@ -89,72 +86,49 @@ def _lean_explore_line_span(source_link: str) -> tuple[int | None, int | None]:
 
 
 class LeanExploreRetriever:
-    """LeanExplore-backed retriever.
-
-    The public ``api`` mode needs no API key. The ``local`` mode uses downloaded
-    data. API results are enriched with context from their versioned GitHub
-    source; local mode reads only explicitly configured, versioned local source.
-    """
+    """Search downloaded LeanExplore data and optional matching local source."""
 
     def __init__(
         self,
         *,
-        backend: str = "local",
-        api_key: str | None = None,
-        timeout: float = 20.0,
         packages: list[str] | None = None,
         rerank_top: int | None = 50,
         use_local_data: bool = False,
         bm25_only: bool = False,
         bm25_k: int = 1000,
-        include_context: bool | None = None,
-        retries: int = 2,
+        include_context: bool = False,
         embedding_model: str | None = None,
         reranker_model: str | None = None,
         source_dir: str | Path | None = None,
         local_concurrency: int = 4,
         local_max_pending: int = 128,
     ) -> None:
-        self.backend = backend.strip().lower().replace("-", "_")
+        from lean_explore.search import SearchEngine, Service
+
         self.packages = packages
         self.rerank_top = rerank_top
         self.bm25_only = bm25_only
         self.bm25_k = bm25_k
-        self.timeout = timeout
-        self.retries = int(retries)
-        if not 0 <= self.retries <= 2:
-            raise ValueError("DAVINCI_LEANEXPLORE_RETRIES must be between 0 and 2")
-        self.include_context = self.backend == "api" if include_context is None else include_context
+        self.include_context = include_context
         self.source_dir = Path(source_dir).expanduser().resolve() if source_dir else None
         self.local_concurrency = local_concurrency
         self.local_max_pending = local_max_pending
-        self._local_runtime: LocalSearchRuntime | None = None
-        self.engine = None
-        if self.backend == "api":
-            from lean_explore.api import ApiClient
-
-            self.client = ApiClient(api_key=api_key, timeout=timeout)
-        elif self.backend == "local":
-            from lean_explore.search import SearchEngine, Service
-
-            engine_options: dict[str, Any] = {"use_local_data": use_local_data}
-            for key, value in (
-                ("embedding_model_name", embedding_model),
-                ("reranker_model_name", reranker_model),
-            ):
-                if value:
-                    path = Path(value).expanduser().resolve()
-                    if not path.is_dir():
-                        raise FileNotFoundError(f"LeanExplore local model directory does not exist: {path}")
-                    engine_options[key] = str(path)
-            self._local_runtime = LocalSearchRuntime(local_concurrency, local_max_pending)
-            runtime = self._local_runtime
-            self.engine = runtime.initialize(
-                lambda: guarded_engine_type(SearchEngine, runtime)(**engine_options)
-            )
-            self.client = Service(self.engine)
-        else:
-            raise ValueError("DAVINCI_LEANEXPLORE_BACKEND must be api or local")
+        engine_options: dict[str, Any] = {"use_local_data": use_local_data}
+        for key, value in (
+            ("embedding_model_name", embedding_model),
+            ("reranker_model_name", reranker_model),
+        ):
+            if value:
+                path = Path(value).expanduser().resolve()
+                if not path.is_dir():
+                    raise FileNotFoundError(f"LeanExplore local model directory does not exist: {path}")
+                engine_options[key] = str(path)
+        self._local_runtime = LocalSearchRuntime(local_concurrency, local_max_pending)
+        runtime = self._local_runtime
+        self.engine = runtime.initialize(
+            lambda: guarded_engine_type(SearchEngine, runtime)(**engine_options)
+        )
+        self.client = Service(self.engine)
 
     async def search(
         self,
@@ -170,15 +144,11 @@ class LeanExploreRetriever:
             keywords=keywords,
             limit=limit,
         )
-        if self.backend == "local":
-            assert self._local_runtime is not None
-            return await self._local_runtime.run(lambda: self._search(**arguments))
-        return await self._search(**arguments)
+        return await self._local_runtime.run(lambda: self._search(**arguments))
 
     async def aclose(self) -> None:
         """Drain local searches and dispose their database on its owner loop."""
-        if self._local_runtime is not None:
-            await self._local_runtime.aclose()
+        await self._local_runtime.aclose()
 
     async def _search(
         self,
@@ -190,27 +160,20 @@ class LeanExploreRetriever:
     ) -> list[dict[str, Any]]:
         limit = max(1, min(int(limit), 50))
         combined: list[dict[str, Any]] = []
-        deadline = asyncio.get_running_loop().time() + self.timeout
 
         for query, reason in _lean_explore_queries(
             natural_language_query=natural_language_query,
             lean_name=lean_name,
             keywords=keywords,
         ):
-            if self.backend == "local" and self.bm25_only:
+            if self.bm25_only:
                 query_results = await self._search_bm25_only(query=query, limit=limit)
             else:
-                async def request():
-                    return await self.client.search(
-                        query=query,
-                        limit=limit,
-                        rerank_top=self.rerank_top,
-                        packages=self.packages,
-                    )
-
-                response = (
-                    await retry_request(request, deadline=deadline, retries=self.retries)
-                    if self.backend == "api" else await request()
+                response = await self.client.search(
+                    query=query,
+                    limit=limit,
+                    rerank_top=self.rerank_top,
+                    packages=self.packages,
                 )
                 query_results = response.results
             for rank, result in enumerate(query_results, start=1):
@@ -234,8 +197,8 @@ class LeanExploreRetriever:
         return results
 
     async def _add_context(self, results: list[dict[str, Any]]) -> None:
-        """Read versioned local files, or fetch API source with a bounded wait."""
-        files: dict[str, list[dict[str, Any]]] = {}
+        """Read each matching versioned local file once for all its hits."""
+        files: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
         for result in results:
             result["context_status"] = "unavailable"
             if result.get("signature_status") == "name_mismatch":
@@ -245,56 +208,15 @@ class LeanExploreRetriever:
             location = _source_location(str(result.get("source_link") or ""))
             if not location or not result.get("line_start") or not result.get("line_end"):
                 continue
-            repository = location["source_repository"].removeprefix("https://github.com/")
-            url = f"https://raw.githubusercontent.com/{repository}/{location['source_revision']}/{location['source_path']}"
-            files.setdefault(url, []).append(result)
+            identity = (location["source_repository"], location["source_revision"], location["source_path"])
+            files.setdefault(identity, []).append(result)
         if not files:
             return
-        if self.backend == "local":
-            started = time.perf_counter()
-            await asyncio.to_thread(self._add_local_context, files)
-            LocalSearchRuntime.record_context(time.perf_counter() - started)
-            return
-        timeout = min(max(self.timeout, 0.1), 10.0)
-        deadline = asyncio.get_running_loop().time() + timeout
-        gate = asyncio.Semaphore(4)
-        async with httpx.AsyncClient(timeout=timeout, follow_redirects=False) as client:
-            async def fetch(url: str) -> str:
-                async with gate:
-                    async with client.stream("GET", url) as response:
-                        response.raise_for_status()
-                        chunks = bytearray()
-                        async for chunk in response.aiter_bytes():
-                            chunks.extend(chunk)
-                            if len(chunks) > _MAX_SOURCE_BYTES:
-                                raise ValueError("Source file exceeds the 2 MiB context limit.")
-                return chunks.decode("utf-8")
+        started = time.perf_counter()
+        await asyncio.to_thread(self._add_local_context, files)
+        LocalSearchRuntime.record_context(time.perf_counter() - started)
 
-            async def enrich(url: str, items: list[dict[str, Any]]) -> None:
-                try:
-                    text = await retry_request(lambda: fetch(url), deadline=deadline, retries=self.retries)
-                    self._apply_context(text, items)
-                except asyncio.CancelledError:
-                    for item in items:
-                        if item["context_status"] != "available":
-                            item["context_error"] = "Versioned source context exceeded the time limit."
-                    raise
-                except asyncio.TimeoutError:
-                    for item in items:
-                        if item["context_status"] != "available":
-                            item["context_error"] = "Versioned source context exceeded the time limit."
-                except Exception as exc:
-                    for item in items:
-                        if item["context_status"] != "available":
-                            item["context_error"] = f"{type(exc).__name__}: {exc}"
-
-            tasks = [asyncio.create_task(enrich(url, items)) for url, items in files.items()]
-            try:
-                await asyncio.wait_for(asyncio.gather(*tasks), timeout=timeout)
-            except asyncio.TimeoutError:
-                pass  # Search hits remain useful when optional context is unavailable.
-
-    def _add_local_context(self, files: dict[str, list[dict[str, Any]]]) -> None:
+    def _add_local_context(self, files: dict[tuple[str, str, str], list[dict[str, Any]]]) -> None:
         """Read/scan versioned sources outside the SDK owner and model gates."""
         for items in files.values():
             try:
@@ -330,7 +252,7 @@ class LeanExploreRetriever:
 
     @staticmethod
     def _apply_context(text: str, items: list[dict[str, Any]]) -> None:
-        """Use the same source-span and identity checks for both backends."""
+        """Check indexed source spans and declaration identity before adding context."""
         lines = text.splitlines()
         for item in items:
             start, end = int(item["line_start"]), int(item["line_end"])

@@ -24,11 +24,11 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=10)
     parser.add_argument("--output", type=Path, help="Write full raw and model-visible evidence to JSON")
     args = parser.parse_args()
-    if os.environ.get("DAVINCI_RETRIEVE_BACKEND") != "lean_explore" or os.environ.get(
-        "DAVINCI_LEANEXPLORE_BACKEND"
-    ) != "local":
-        parser.error("Set DAVINCI_RETRIEVE_BACKEND=lean_explore and "
-                     "DAVINCI_LEANEXPLORE_BACKEND=local; see examples/leanexplore-local.env.sh")
+    if os.getenv("DAVINCI_RETRIEVE_BACKEND", "lean_explore").strip().lower() not in {
+        "lean_explore", "lean-explore", "leanexplore",
+    }:
+        parser.error("This check requires DAVINCI_RETRIEVE_BACKEND=lean_explore; "
+                     "see examples/leanexplore-local.env.sh")
 
     network_attempts: list[str] = []
     original_connect = socket.socket.connect

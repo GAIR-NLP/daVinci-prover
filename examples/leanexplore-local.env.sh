@@ -17,7 +17,6 @@ _dvp_configure_local_retrieval() {
   export LEAN_EXPLORE_CACHE_DIR="$dvp_profile_cache"
   export LEAN_EXPLORE_VERSION="$dvp_profile_version"
   export DAVINCI_RETRIEVE_BACKEND=lean_explore
-  export DAVINCI_LEANEXPLORE_BACKEND=local
   export DAVINCI_LEANEXPLORE_USE_LOCAL_DATA=false
   export DAVINCI_LEANEXPLORE_PACKAGES=Mathlib
   export DAVINCI_LEANEXPLORE_BM25_ONLY=false

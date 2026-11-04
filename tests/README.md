@@ -5,9 +5,9 @@ Tests are grouped by responsibility:
 | Directory | Coverage |
 | --- | --- |
 | `agent/` | Agent loop, feedback, and conversation traces |
-| `llm_clients/` | Model calls, authentication, routing, and cache probing |
+| `llm_clients/` | Model calls, authentication, and routing |
 | `toolkits/` | File operations and source search |
-| `retrieval/` | LeanExplore local retrieval, remote clients, and server |
+| `retrieval/` | Local LeanExplore, source context, and retrieval feedback |
 | `verification/` | Lean, parsing, fixed contracts, Comparator, context activation, and reverification |
 | `orchestration/` | Batch scheduling, infrastructure recovery, and runtime provenance |
 | `runtime/` | Runtime paths, package interfaces, and configuration profiles |

@@ -22,7 +22,6 @@ class Results(list):
 
 
 class Retriever:
-    backend = "local"
     local_concurrency = 4
     local_max_pending = 128
 
@@ -120,7 +119,6 @@ def test_cli_writes_report_returns_failure_and_closes_one_instance(
 
     monkeypatch.setattr(backend, "get_cached_retriever", factory)
     monkeypatch.setenv("DAVINCI_RETRIEVE_BACKEND", "lean_explore")
-    monkeypatch.setenv("DAVINCI_LEANEXPLORE_BACKEND", "local")
     output = tmp_path / "benchmark.json"
     exit_code = benchmark_module.main(["--concurrency", "4", "--output", str(output)])
     report = json.loads(output.read_text())
@@ -137,13 +135,12 @@ def test_cli_writes_report_returns_failure_and_closes_one_instance(
         assert report["configuration"]["local_concurrency"] == 4
 
 
-def test_cli_rejects_remote_backend_before_constructing_retriever(
+def test_cli_rejects_jsonl_backend_before_constructing_retriever(
     benchmark_module, monkeypatch, tmp_path,
 ):
     from dvp.toolkits.retrieval import backend
 
-    monkeypatch.setenv("DAVINCI_RETRIEVE_BACKEND", "lean_explore")
-    monkeypatch.setenv("DAVINCI_LEANEXPLORE_BACKEND", "remote")
+    monkeypatch.setenv("DAVINCI_RETRIEVE_BACKEND", "jsonl")
     monkeypatch.setattr(backend, "get_cached_retriever", lambda: pytest.fail("Must stay local"))
     with pytest.raises(SystemExit) as exc:
         benchmark_module.main(["--output", str(tmp_path / "unexpected.json")])

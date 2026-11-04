@@ -85,7 +85,7 @@ def source_profile(tmp_path, profile, settings):
     git.chmod(0o755)
     keys = [
         "DVP_COMPARATOR_ROOT", "DAVINCI_TARGET_WORKSPACE", "DAVINCI_MODEL",
-        "OPENAI_BASE_URL", "CUDA_VISIBLE_DEVICES", "DAVINCI_LEANEXPLORE_BACKEND",
+        "OPENAI_BASE_URL", "CUDA_VISIBLE_DEVICES", "HF_HUB_OFFLINE",
         "DAVINCI_RETRIEVE_INDEX", "DVP_PROFILE_STATUS",
     ]
     program = "import json,os; print(json.dumps({k:os.environ.get(k) for k in " + repr(keys) + "}))"
@@ -111,34 +111,24 @@ def test_local_profile_preserves_proof_settings_and_fails_before_export(configur
     settings = {
         "DVP_COMPARATOR_ROOT": "/chosen/comparator", "DAVINCI_TARGET_WORKSPACE": str(workspace),
         "DAVINCI_MODEL": "chosen-model", "OPENAI_BASE_URL": "http://model.test/v1",
-        "CUDA_VISIBLE_DEVICES": "3", "DAVINCI_LEANEXPLORE_BACKEND": "remote",
+        "CUDA_VISIBLE_DEVICES": "3", "HF_HUB_OFFLINE": "0",
         "DAVINCI_RETRIEVE_INDEX": "/chosen/index.jsonl",
         "LEAN_EXPLORE_CACHE_DIR": str(snapshot.parent), "LEAN_EXPLORE_VERSION": snapshot.name,
     }
     actual = source_profile(tmp_path, "leanexplore-local.env.sh", settings)
     assert actual.pop("DVP_PROFILE_STATUS") == ("0" if valid else "1")
-    assert actual.pop("DAVINCI_LEANEXPLORE_BACKEND") == ("local" if valid else "remote")
+    assert actual.pop("HF_HUB_OFFLINE") == ("1" if valid else "0")
     assert actual.pop("DAVINCI_RETRIEVE_INDEX") == (None if valid else settings["DAVINCI_RETRIEVE_INDEX"])
     assert all(actual[key] == settings[key] for key in actual)
 
 
-@pytest.mark.parametrize("profile", ["proof.env.sh", "leanexplore-remote.env.sh"])
-def test_profiles_keep_caller_runtime_and_model_choices(tmp_path, profile):
+def test_proof_profile_keeps_caller_runtime_and_model_choices(tmp_path):
     settings = {
         "DVP_COMPARATOR_ROOT": "/chosen/comparator", "DAVINCI_TARGET_WORKSPACE": "/chosen/workspace",
         "DAVINCI_MODEL": "chosen-model", "OPENAI_BASE_URL": "http://model.test/v1",
-        "CUDA_VISIBLE_DEVICES": "3", "DAVINCI_LEANEXPLORE_URL": "http://retrieval.test:8765",
+        "CUDA_VISIBLE_DEVICES": "3",
     }
-    actual = source_profile(tmp_path, profile, settings)
+    actual = source_profile(tmp_path, "proof.env.sh", settings)
     assert actual["DVP_PROFILE_STATUS"] == "0"
     for key in ["DVP_COMPARATOR_ROOT", "DAVINCI_TARGET_WORKSPACE", "DAVINCI_MODEL", "OPENAI_BASE_URL", "CUDA_VISIBLE_DEVICES"]:
         assert actual[key] == settings[key]
-
-
-def test_remote_profile_without_url_keeps_existing_retrieval_configuration(tmp_path):
-    actual = source_profile(tmp_path, "leanexplore-remote.env.sh", {
-        "DAVINCI_LEANEXPLORE_BACKEND": "local", "DAVINCI_RETRIEVE_INDEX": "/chosen/index.jsonl",
-    })
-    assert actual["DVP_PROFILE_STATUS"] == "1"
-    assert actual["DAVINCI_LEANEXPLORE_BACKEND"] == "local"
-    assert actual["DAVINCI_RETRIEVE_INDEX"] == "/chosen/index.jsonl"
