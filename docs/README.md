@@ -4,6 +4,7 @@
 
 | Guide | Contents |
 | --- | --- |
+| [Agent installation](agent-install.md) | Instructions for a coding agent to set up and verify DVP |
 | [Installation](installation.md) | Python, Lean, Mathlib, and cache setup |
 | [Usage](usage.md) | Model configuration, proofs, evaluation, and troubleshooting |
 | [Local configuration](local-configuration.md) | Reusable machine settings |

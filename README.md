@@ -23,17 +23,28 @@ Historical acceptance rates (%):
 Requires Linux, Python **3.11+** (3.12 recommended), and Lean **4.35.0**.
 Prepared environment: `GAIR-NLP/daVinci-Prover:4.35`.
 
+Let your coding agent follow the [installation instructions](docs/agent-install.md):
+
+```text
+Read https://raw.githubusercontent.com/zwhong714/daVinci-prover/main/docs/agent-install.md and install DVP on this machine. Verify the setup with the single-theorem Quick start.
+```
+
+Or install manually:
+
 ```bash
 git clone https://github.com/zwhong714/daVinci-prover.git
 cd daVinci-prover
 python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -e .
+mkdir -p .local
+cp examples/proof.env.sh .local/proof.env.sh
 dvp --help
 ```
 
 Prepare the pinned [Lean / Mathlib workspace](docs/installation.md#lean-and-mathlib)
 and [register Comparator](docs/verification.md#installing-the-lean-435-verifier).
+Save custom paths in `.local/proof.env.sh`.
 Optional [local retrieval](docs/leanexplore.md) uses the published LeanExplore 4.35 snapshot.
 
 ## Quick start
@@ -41,7 +52,8 @@ Optional [local retrieval](docs/leanexplore.md) uses the published LeanExplore 4
 After setup, configure the [DeepSeek API](https://api-docs.deepseek.com/) from the repository root:
 
 ```bash
-source examples/proof.env.sh
+source .venv/bin/activate
+source .local/proof.env.sh
 export OPENAI_API_KEY="your-deepseek-api-key"
 export DAVINCI_MODEL=deepseek-flash
 export OPENAI_BASE_URL=https://api.deepseek.com

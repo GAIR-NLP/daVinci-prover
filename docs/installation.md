@@ -4,6 +4,8 @@
 
 Run these commands in Bash from the source checkout. Set up Python, the pinned Lean / Mathlib workspace, and Comparator before running proofs.
 
+For installation by a coding agent, use the [agent instructions](agent-install.md).
+
 ## Environment
 
 | Component | Requirement |
