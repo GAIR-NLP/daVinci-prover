@@ -217,7 +217,10 @@ def add_runtime_options(parser: argparse.ArgumentParser) -> None:
             "and protocol-error feedback remain available in either mode."
         ),
     )
-    parser.add_argument("--max-tokens", type=int, default=_env_int("DAVINCI_MAX_TOKENS"))
+    parser.add_argument(
+        "--max-tokens", type=int, default=_env_int("DAVINCI_MAX_TOKENS"),
+        help="Output-token limit (or DAVINCI_MAX_TOKENS); omitted by default to use the service default.",
+    )
     parser.add_argument(
         "--temperature",
         type=float,

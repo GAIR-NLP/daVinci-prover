@@ -38,7 +38,7 @@ parameters are not silently dropped. Native providers use LiteLLM's proxy settin
 dvp prove \
   --theorem $'import Mathlib\ntheorem demo (n : Nat) : n + 0 = n := by sorry' \
   --lean-retrieve true --python-execute true \
-  --max-turns 20 --max-tokens 16384 --lean-timeout 120 \
+  --max-turns 20 --lean-timeout 120 \
   --trace-level full \
   --run-dir "$DVP_ROOT/runs/demo_$(date +%Y%m%d_%H%M%S)"
 ```
@@ -59,6 +59,11 @@ Add `--limit 1 --concurrency 1` for a smoke run. Other inputs include
 `benchmarks/fate_x_lean435.jsonl` and `benchmarks/putnam200.jsonl`.
 Use `dvp prove --theorem-file problem.lean` for a single problem stored in a file.
 
+DVP omits `max_tokens` by default, leaving the output limit to the model service.
+Set `--max-tokens N` or `DAVINCI_MAX_TOKENS` for an explicit limit; the command-line
+option takes precedence. To restore the service default, omit the option and
+unset `DAVINCI_MAX_TOKENS`. Service and context-window limits still apply.
+
 [Retrieval](#selecting-retrieval) and [Python experiments](python-experiments.md)
 are enabled by default. Explicitly use `--lean-retrieve false` or
 `--python-execute false` only when you intend to disable that tool. Missing assets,
@@ -74,7 +79,6 @@ and `dvp prove --help` / `dvp eval --help` for all options.
 For the previous `deepseek-v4.1-flash` comparison, sampling was explicitly set to
 `--temperature 1.0 --top-p 0.95 --reasoning-effort high --thinking enabled
 --chat-template-thinking true --max-tokens 32000`. These settings are service-specific.
-For uncapped requests, omit `--max-tokens` and unset `DAVINCI_MAX_TOKENS`.
 Keep model, endpoint, dataset, and budgets fixed when comparing harness changes.
 
 ### Editing and automatic checks

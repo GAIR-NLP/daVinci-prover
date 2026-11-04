@@ -66,7 +66,7 @@ dvp prove \
   --thinking enabled --reasoning-effort high \
   --theorem $'import Mathlib\ntheorem demo (n : Nat) : n + 0 = n := by sorry' \
   --lean-retrieve true --python-execute true \
-  --max-turns 20 --max-tokens 16384 --lean-timeout 120 \
+  --max-turns 20 --lean-timeout 120 \
   --trace-level full
 ```
 
@@ -79,13 +79,13 @@ dvp eval \
   --dataset benchmarks/putnam200.jsonl --split all \
   --thinking enabled --reasoning-effort high \
   --lean-retrieve true --python-execute true --concurrency 20 \
-  --max-turns 200 --max-tool-calls 800 --max-tokens 32768 \
+  --max-turns 200 --max-tool-calls 800 \
   --lean-timeout 1800 --llm-timeout 1800 --task-timeout 14400 \
   --attempts-per-task 1 --retries 2 --trace-level full \
   --run-root "runs/putnam200_$(date +%Y%m%d_%H%M%S)"
 ```
 
-The run directory contains `summary.json`, `results.jsonl`, and per-task traces under `tasks/`. See [usage](docs/usage.md) for resume and other options.
+The run directory contains `summary.json`, `results.jsonl`, and per-task traces under `tasks/`. Output-token limits use the service default unless explicitly configured. See [usage](docs/usage.md) for overrides, resume, and other options.
 
 ## Harness design
 

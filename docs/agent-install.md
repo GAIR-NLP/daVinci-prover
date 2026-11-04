@@ -74,7 +74,7 @@ Require both checks to pass, and verify the workspace version and runtime manife
 
 ## 7. Run one proof and hand off
 
-If usable credentials are available, run the README **single-theorem** command with the configured service and a fresh run directory. Keep retrieval and Python enabled. DeepSeek settings are examples; use only thinking options supported by the chosen service.
+If usable credentials are available, run the README **single-theorem** command with the configured service and a fresh run directory. Keep retrieval and Python enabled. Leave the output-token limit unset unless the user has explicitly configured one. DeepSeek settings are examples; use only thinking options supported by the chosen service.
 
 Require `result.json` to report success and score **1**, with Comparator acceptance in `comparator_artifacts/`. Compilation alone is insufficient. If credentials are unavailable, finish local setup and state **“Model API and end-to-end proof not tested.”**
 
