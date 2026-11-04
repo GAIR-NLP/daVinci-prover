@@ -23,11 +23,7 @@ Historical acceptance rates (%):
 Requires Linux, Python **3.11+** (3.12 recommended), and Lean **4.35.0**.
 Prepared environment: `GAIR-NLP/daVinci-Prover:4.35`.
 
-Let your coding agent follow the [installation instructions](docs/agent-install.md):
-
-```text
-Read https://raw.githubusercontent.com/zwhong714/daVinci-prover/main/docs/agent-install.md and install DVP on this machine. Verify the setup with the single-theorem Quick start.
-```
+Let your coding agent follow the [installation instructions](docs/agent-install.md).
 
 Or install manually:
 
