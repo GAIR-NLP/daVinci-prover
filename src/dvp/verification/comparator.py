@@ -22,7 +22,7 @@ from typing import Any
 from dvp.runtime.paths import REPOSITORY_ROOT
 from dvp.verification.lean import LeanVerifier, contains_placeholder
 from dvp.verification.modules import CandidateBundle, collect_bundle
-from dvp.verification.workspace_dependencies import dependency_path
+from dvp.verification.workspace_dependencies import dependency_path, dependency_roots
 
 
 BACKEND = "leanprover/comparator"
@@ -101,7 +101,7 @@ def sandbox_command(command: list[str], *, workspace: Path, toolchain: Path,
         args.append("--no-sandbox")
     for path in writable:
         args += ["--writable", str(path)]
-    for path in read_only:
+    for path in dict.fromkeys((*read_only, *dependency_roots(workspace))):
         args += ["--read-only", str(path)]
     for key, value in (environment or {}).items():
         args += ["--env", f"{key}={value}"]

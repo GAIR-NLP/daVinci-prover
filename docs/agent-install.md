@@ -36,7 +36,7 @@ Confirm `git rev-parse HEAD`, `lake env lean --version`, and the guide's actual 
 
 Run the [registration commands](verification.md#installing-the-lean-435-verifier) against those resolved paths. Registration must run real positive and negative checks: accept a valid proof and reject a changed statement, `sorry`, and an added axiom. Inspect the setup report and resulting `4.35.0/runtime.json`; file existence alone is insufficient.
 
-Use the selected verification mode consistently. If sandbox setup fails, diagnose it and report the blocker; never silently switch to `--no-sandbox`. Honor an already authorized mode choice. Re-register after moving paths or changing registered executables; do not edit recorded hashes to bypass validation.
+Use the selected verification mode consistently. `--no-sandbox` disables bubblewrap namespaces only; Landlock + seccomp still restrict Lean file access and networking. If isolation setup fails, diagnose it and report the blocker; never silently switch modes. Honor an already authorized mode choice. Re-register after moving paths or changing registered executables or the sandbox adapter; do not edit recorded hashes to bypass validation.
 
 ## 5. Prepare retrieval and Python
 

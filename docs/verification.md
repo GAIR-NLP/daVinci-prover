@@ -42,7 +42,7 @@ Registration tests valid proofs, changed statements, `sorry`, and added axioms b
 
 Runtime loading verifies the Lean version, toolchain paths, and registered SHA256 values of `lake`, `leanexport`, `leanchecker`, and the sandbox adapter when enabled. Missing or changed hashes stop execution. Register again after moving machines or paths, or intentionally updating these programs; hashes are never refreshed automatically.
 
-To explicitly use unsandboxed mode:
+To run without bubblewrap namespaces, select Landlock + seccomp instead:
 
 ```bash
 export DVP_COMPARATOR_ROOT="$DVP_ROOT/runtime/comparator-no-sandbox"
@@ -52,6 +52,10 @@ python scripts/setup_comparator_435.py \
   --runtime-root "$DVP_COMPARATOR_ROOT" --no-sandbox
 ```
 
-The selected mode applies to development checks, `#eval`, and final acceptance. Sandboxed checks restrict candidate writes to their private build directory; **unsandboxed mode provides no such isolation**. Both clear inherited credentials and drop root subprocesses to UID/GID 65534; follow the [path permissions](installation.md#lean-and-mathlib).
+The existing `--no-sandbox` flag and runtime value `unsandboxed` now disable **namespaces only**. They require working Linux Landlock and `libseccomp2`; they do not permit unrestricted Lean execution.
 
-Sandbox failures never trigger an automatic mode switch. Changes to the runtime, source, or execution policy require a new run directory; see [resume rules](architecture.md#resuming-runs-and-upgrading-fixed-contexts). Save the selected runtime in your [local configuration](local-configuration.md).
+Both modes restrict file-content reads to the trusted toolchain, pinned dependencies, and the current check's source and build files. Writes are limited to designated build and private temporary directories; network access is blocked. Each Comparator build, export, and kernel-check child gets its own restrictions, and candidate builds cannot read the parent's private export files. Keep other tasks and saved answers outside the trusted dependency directories.
+
+These restrictions also cover development checks and `#eval`. Both modes clear inherited credentials and drop root subprocesses to UID/GID 65534; follow the [path permissions](installation.md#lean-and-mathlib). Landlock mode still shares process and IPC namespaces, and some filesystem metadata can remain visible. It protects file contents but does not provide complete isolation between hostile tenants.
+
+Isolation failures stop execution without switching modes. Re-register after upgrading the sandbox adapter, and use a new run directory after changing runtime, source, or policy; see [resume rules](architecture.md#resuming-runs-and-upgrading-fixed-contexts). Save the selected runtime in your [local configuration](local-configuration.md).

@@ -12,9 +12,16 @@ import os
 from pathlib import Path
 import shutil
 import sys
+import tempfile
+
+# This file is also launched directly, including by an isolated Python interpreter.
+if not __package__:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from lean_isolation import isolate, trusted_read_paths, validate_read_grant
+else:
+    from .lean_isolation import isolate, trusted_read_paths, validate_read_grant
 
 
-TOOLCHAIN_ALIAS = "/tmp/dvp-toolchain"
 SANDBOX_UID = 65534
 _ENV_ALLOWED = {
     "LEAN_PATH", "LEAN_NUM_THREADS", "LANG", "LC_ALL",
@@ -23,6 +30,7 @@ _DENIED_SYSCALLS = (
     "socket", "socketpair", "ptrace", "process_vm_readv", "process_vm_writev",
     "process_madvise", "kcmp", "pidfd_getfd", "bpf", "perf_event_open",
     "mount", "umount2", "pivot_root", "unshare", "setns",
+    "io_uring_setup", "io_uring_enter", "io_uring_register", "open_by_handle_at",
 )
 
 
@@ -71,62 +79,115 @@ def main() -> None:
     command = args.command[1:] if args.command[:1] == ["--"] else args.command
     if not command:
         parser.error("a command is required after --")
-    toolchain, cwd = args.toolchain.resolve(strict=True), args.cwd.resolve(strict=True)
-    if not (toolchain / "bin/lean").is_file() or not cwd.is_dir():
-        raise RuntimeError("invalid Lean toolchain or working directory")
-    environment = {
-        "PATH": str(toolchain if args.no_sandbox else TOOLCHAIN_ALIAS) + "/bin:/usr/bin:/bin",
-        "HOME": "/tmp", "TMPDIR": "/tmp", "LANG": "C.UTF-8",
-        "LEAN_ABORT_ON_PANIC": "1", "LEAN_NUM_THREADS": "1",
-    }
-    for item in args.env:
+    status = run_isolated(
+        command, toolchain=args.toolchain, cwd=args.cwd,
+        read_only=tuple(args.read_only), writable=tuple(args.writable),
+        environment=dict(_parse_environment(args.env)), sandboxed=not args.no_sandbox,
+    )
+    raise SystemExit(status)
+
+
+def _parse_environment(items: list[str]) -> list[tuple[str, str]]:
+    result = []
+    for item in items:
         name, separator, value = item.partition("=")
         if not separator or name not in _ENV_ALLOWED:
             raise RuntimeError(f"unsupported sandbox environment variable: {name}")
-        environment[name] = value
-    if args.no_sandbox:
-        # An installed runtime selects this mode explicitly. Keep credentials
-        # out of the child environment and avoid running Lean as host root.
-        _drop_privileges()
-        os.chdir(cwd)
-        os.execvpe(command[0], command, environment)
-        return
-    bwrap = shutil.which("bwrap")
-    if not bwrap:
-        raise RuntimeError("bubblewrap is required; unsandboxed execution is disabled")
-    writable = [path.resolve(strict=True) for path in args.writable]
-    # A task may write its own build or scratch directory only. The root, source
-    # project, and dependency tree are never granted broadly writable access.
+        result.append((name, value))
+    return result
+
+
+def _validate_grants(cwd: Path, toolchain: Path, read_only: tuple[Path, ...],
+                     writable: tuple[Path, ...]) -> None:
+    for path in (*read_only, *writable):
+        validate_read_grant(path)
     for path in writable:
-        if path == cwd or path == Path("/") or path == toolchain or path in cwd.parents:
+        if path == cwd or path in cwd.parents or path.is_relative_to(toolchain) or path in toolchain.parents:
             raise RuntimeError(f"unsafe writable sandbox path: {path}")
-    fd = _seccomp_filter()
-    invocation = [
-        bwrap, "--ro-bind", "/", "/", "--dev", "/dev",
-        "--tmpfs", "/tmp", "--tmpfs", "/run", "--tmpfs", "/proc",
-        "--dir", "/proc/self", "--symlink", TOOLCHAIN_ALIAS + "/bin/lake", "/proc/self/exe",
-    ]
-    # This container cannot mount a new procfs. Lean resolves its executable via
-    # /proc/<pid>/exe; expose only that symlink, never the host process filesystem.
+
+
+def run_isolated(command: list[str], *, toolchain: Path, cwd: Path,
+                 read_only: tuple[Path, ...] = (), writable: tuple[Path, ...] = (),
+                 environment: dict[str, str] | None = None, sandboxed: bool = True,
+                 read_cwd: bool = True) -> int:
+    """Run one child with private temporary storage and a filesystem allowlist.
+
+    The trusted supervisor retains its identity only to reap the child and clean
+    temporary files. All model-controlled Lean executes after isolation setup.
+    """
+    toolchain, cwd = toolchain.resolve(strict=True), cwd.resolve(strict=True)
+    if not (toolchain / "bin/lean").is_file() or not cwd.is_dir():
+        raise RuntimeError("invalid Lean toolchain or working directory")
+    read_only = tuple(dict.fromkeys(path.resolve(strict=True) for path in read_only))
+    if read_cwd:
+        read_only = tuple(dict.fromkeys((cwd, *read_only)))
+    writable = tuple(path.resolve(strict=True) for path in writable)
+    _validate_grants(cwd, toolchain, read_only, writable)
+    bwrap = shutil.which("bwrap") if sandboxed else None
+    if sandboxed and not bwrap:
+        raise RuntimeError("bubblewrap is required; unsandboxed execution is disabled")
+    with tempfile.TemporaryDirectory(prefix="dvp-lean-private-") as temporary:
+        private = Path(temporary)
+        private.chmod(0o700)
+        if os.geteuid() == 0:
+            os.chown(private, SANDBOX_UID, SANDBOX_UID)
+        child_env = {
+            "PATH": f"{toolchain}/bin:/usr/bin:/bin", "HOME": str(private), "TMPDIR": str(private),
+            "LANG": "C.UTF-8", "LEAN_ABORT_ON_PANIC": "1", "LEAN_NUM_THREADS": "1",
+            **(environment or {}),
+        }
+        # Never inherit a parent's export/temp directory into a candidate child.
+        child_env.update(HOME=str(private), TMPDIR=str(private))
+        pid = os.fork()
+        if pid == 0:
+            try:
+                # Landlock cannot revoke access through an already-open fd.
+                # In particular, never inherit a Comparator export handle.
+                for descriptor in os.listdir("/proc/self/fd"):
+                    if descriptor.isdigit() and int(descriptor) > 2:
+                        try:
+                            os.close(int(descriptor))
+                        except OSError:
+                            pass
+                if sandboxed:
+                    _exec_bwrap(bwrap, command, toolchain, cwd, read_only, writable, child_env)
+                else:
+                    _drop_privileges()
+                    os.chdir(cwd)
+                    isolate(toolchain, read_only, (*writable, private))
+                    os.execvpe(command[0], command, child_env)
+            except BaseException as exc:
+                try:
+                    os.write(2, f"DVP_SANDBOX_ERROR: {exc}\n".encode("utf-8", errors="replace"))
+                finally:
+                    os._exit(125)
+        _, status = os.waitpid(pid, 0)
+        return os.waitstatus_to_exitcode(status) if os.WIFEXITED(status) else 128 + os.WTERMSIG(status)
+
+
+def _exec_bwrap(bwrap: str, command: list[str], toolchain: Path, cwd: Path,
+                read_only: tuple[Path, ...], writable: tuple[Path, ...],
+                environment: dict[str, str]) -> None:
+    # Start from an empty root. Read-only mounting the host / still exposes
+    # other tasks' answers, so every accessible host path is listed explicitly.
+    invocation = [bwrap, "--tmpfs", "/", "--dev", "/dev", "--tmpfs", "/tmp",
+                  "--tmpfs", "/proc", "--dir", "/proc/self",
+                  "--symlink", str(toolchain / "bin/lake"), "/proc/self/exe"]
     for pid in range(1, 2049):
         invocation += ["--symlink", "self", f"/proc/{pid}"]
-    invocation += [
-        "--remount-ro", "/proc", "--unshare-all", "--die-with-parent", "--new-session",
-        "--cap-drop", "ALL", "--ro-bind", str(toolchain), TOOLCHAIN_ALIAS,
-        "--ro-bind", str(cwd), str(cwd),
-    ]
-    for path in args.read_only:
-        path = path.resolve(strict=True)
+    for path in dict.fromkeys((*trusted_read_paths(toolchain), *read_only)):
         invocation += ["--ro-bind", str(path), str(path)]
     for path in writable:
         invocation += ["--bind", str(path), str(path)]
-    invocation += ["--chdir", str(cwd), "--clearenv", "--seccomp", str(fd)]
-    for name, value in environment.items():
-        invocation += ["--setenv", name, value.replace(str(toolchain), TOOLCHAIN_ALIAS)]
-    command = [part.replace(str(toolchain), TOOLCHAIN_ALIAS) for part in command]
+    # Kernels may request the parent's export directory as cwd, but only their
+    # exact export/config files are readable. Creating an empty cwd grants no data.
+    invocation += ["--dir", str(cwd), "--chdir", str(cwd), "--remount-ro", "/proc",
+                   "--unshare-all", "--die-with-parent", "--new-session", "--cap-drop", "ALL",
+                   "--clearenv", "--seccomp", str(_seccomp_filter())]
+    environment = {**environment, "HOME": "/tmp", "TMPDIR": "/tmp"}
+    for key, value in environment.items():
+        invocation += ["--setenv", key, value]
     invocation += ["--", *command]
-    # Drop the *host* identity before bubblewrap creates its user namespace.
-    # Merely using bubblewrap --uid would still map the host root identity.
     _drop_privileges()
     os.execve(bwrap, invocation, {"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8"})
 

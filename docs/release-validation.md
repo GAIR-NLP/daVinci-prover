@@ -47,7 +47,7 @@ The recorded proof was rebuilt and accepted again after executable-hash validati
 | Regression tests | LiteLLM 1.108.0, OpenAI SDK 2.54.0 |
 | Proof verification | Lean 4.35.0; Mathlib `56a005855ea17e0b0958f73ec801ae140b0a1679` |
 
-Both acceptance checks used explicitly registered **unsandboxed** mode.
+Both acceptance checks used explicitly registered **unsandboxed** mode before the current Lean read-isolation policy. They do not validate that newer boundary; see [current execution modes](verification.md#installing-the-lean-435-verifier).
 Candidate SHA256: `7570945f44a9c738bf17b639e422d25e67c49b93ec1a283c38f95c61ecf786f2`.
 This validates one complete execution path; the README's benchmark rates remain
 historical measurements.

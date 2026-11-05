@@ -1,62 +1,78 @@
 #!/usr/bin/python3
-"""Adapt official Lake bubblewrap invocations to this container's empty procfs.
-
-Real bubblewrap still isolates every child. Dependencies are already cached, so
-even Lake's workspace-resolution phase stays offline. The seccomp filter also
-blocks access to host process memory and further namespace creation.
-"""
+"""Apply DVP's read allowlist to every upstream Comparator child invocation."""
 from __future__ import annotations
 
-import os
+import argparse
 from pathlib import Path
-import shutil
 import sys
 
-from sandbox import _seccomp_filter
+# Upstream launches this through env -i; no editable-install import is required.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from sandbox import run_isolated
+from workspace_dependencies import dependency_roots
 
 
-def main() -> None:
-    bwrap = shutil.which("bwrap", path="/usr/bin:/bin")
-    # Lake intentionally invokes this adapter through `env -i`. The selected
-    # toolchain's PATH arrives as a bubblewrap argument, not in our environment.
-    incoming = sys.argv[1:]
-    child_path = ""
-    for position in range(len(incoming) - 2):
-        if incoming[position:position + 2] == ["--setenv", "PATH"]:
-            child_path = incoming[position + 2]
-    lake = shutil.which("lake", path=child_path)
-    if not bwrap or not lake:
-        raise RuntimeError("bubblewrap and the selected Lake executable are required")
-    lake = str(Path(lake).resolve(strict=True))
-    outgoing = []
+def parse_invocation(incoming: list[str]) -> tuple[list[str], Path, tuple[Path, ...], tuple[Path, ...], dict[str, str]]:
+    """Accept the documented Lake sandbox arguments; never grant its host root."""
+    readable, writable, environment, flags = [], [], {}, set()
+    cwd = None
+    command = []
     index = 0
-    found_proc = False
     while index < len(incoming):
         item = incoming[index]
         if item == "--":
-            outgoing.extend(incoming[index:])
+            command = incoming[index + 1:]
             break
-        if item == "--share-net":
-            index += 1
-            continue
-        if item == "--proc":
-            if incoming[index + 1] != "/proc":
-                raise RuntimeError("unexpected proc mount")
-            outgoing += ["--tmpfs", "/proc", "--dir", "/proc/self",
-                         "--symlink", lake, "/proc/self/exe"]
-            for pid in range(1, 2049):
-                outgoing += ["--symlink", "self", f"/proc/{pid}"]
-            outgoing += ["--remount-ro", "/proc"]
-            found_proc = True
+        if item in {"--ro-bind", "--bind"}:
+            source, destination = incoming[index + 1:index + 3]
+            if source != destination:
+                raise RuntimeError("Comparator bind source and destination must match")
+            if source == "/":
+                if item != "--ro-bind":
+                    raise RuntimeError("Comparator may not write the filesystem root")
+            else:
+                (readable if item == "--ro-bind" else writable).append(Path(source))
+            index += 3
+        elif item == "--setenv":
+            key, value = incoming[index + 1:index + 3]
+            if key not in {"PATH", "HOME", "TMPDIR", "LEAN_PATH", "LEAN_ABORT_ON_PANIC",
+                           "LEAN_NUM_THREADS", "LAKE_CHECK_EXPORT", "LANG", "LC_ALL"}:
+                raise RuntimeError(f"Unexpected Comparator environment variable: {key}")
+            environment[key] = value
+            index += 3
+        elif item == "--chdir":
+            cwd = Path(incoming[index + 1])
             index += 2
-            continue
-        outgoing.append(item)
-        index += 1
-    if not found_proc or "--unshare-all" not in outgoing or "--clearenv" not in outgoing:
+        elif item in {"--tmpfs", "--dir", "--dev", "--proc"}:
+            # The child gets a fresh temporary directory or empty namespace,
+            # rather than allowing access to these host directories.
+            index += 2
+        elif item in {"--clearenv", "--unshare-all", "--die-with-parent", "--new-session", "--share-net"}:
+            flags.add(item)
+            index += 1
+        else:
+            raise RuntimeError(f"Unexpected Comparator sandbox argument: {item}")
+    if not command or cwd is None or not {"--clearenv", "--unshare-all"} <= flags:
         raise RuntimeError("unexpected native Comparator sandbox invocation")
-    fd = _seccomp_filter()
-    os.execve(bwrap, [bwrap, "--cap-drop", "ALL", "--seccomp", str(fd), *outgoing],
-              {"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8"})
+    return command, cwd, tuple(readable), tuple(writable), environment
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--toolchain", type=Path, required=True)
+    parser.add_argument("--project", type=Path, required=True)
+    parser.add_argument("--no-bwrap", action="store_true")
+    parser.add_argument("invocation", nargs=argparse.REMAINDER)
+    args = parser.parse_args()
+    incoming = args.invocation[1:] if args.invocation[:1] == ["--"] else args.invocation
+    command, cwd, readable, writable, environment = parse_invocation(incoming)
+    status = run_isolated(
+        command, toolchain=args.toolchain, cwd=cwd,
+        read_only=(*readable, *dependency_roots(args.project.resolve(strict=True))),
+        writable=writable, environment=environment, sandboxed=not args.no_bwrap,
+        read_cwd=False,
+    )
+    raise SystemExit(status)
 
 
 if __name__ == "__main__":

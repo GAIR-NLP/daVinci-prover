@@ -102,7 +102,7 @@ def main() -> None:
                         help="Lean 4.35 toolchain directory containing bin/lean and bin/lake")
     parser.add_argument("--runtime-root", type=Path)
     parser.add_argument("--no-sandbox", action="store_true",
-                        help="Use Lean's --inadvisably-no-sandbox mode for local verification")
+                        help="Disable bubblewrap namespaces; Landlock and seccomp isolation remain required")
     parser.add_argument("--report-dir", type=Path, default=REPO / "analysis/comparator-setup")
     try:
         asyncio.run(install(parser.parse_args()))

@@ -104,7 +104,7 @@ Each attempt uses one model conversation and its own `Submission.lean`. The agen
 
 The model calls tools and receives their results. Consecutive edits are saved together, then each changed Lean file is checked once. Local retrieval and [Python experiments](docs/python-experiments.md) are enabled by default.
 
-When development ends, Comparator checks the saved proof and local modules against the unchanged problem. Compilation feedback and the final chat reply do not determine acceptance. See [verification](docs/verification.md).
+Lean checks restrict file access to the current check and trusted dependencies. When development ends, Comparator checks the saved proof and local modules against the unchanged problem. Compilation feedback and the final chat reply do not determine acceptance. See [verification](docs/verification.md).
 
 Batch evaluation supports concurrency, retries, resume, and full traces. See [usage](docs/usage.md) for commands and [architecture](docs/architecture.md) for implementation details.
 

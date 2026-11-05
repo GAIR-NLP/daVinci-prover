@@ -1,12 +1,9 @@
 """Runtime selection and isolation invariants for Lean's bundled Comparator."""
 import importlib.util
-import asyncio
 import hashlib
 import json
-import os
 from pathlib import Path
 import sys
-import tempfile
 
 import pytest
 
@@ -99,28 +96,6 @@ def test_runtime_requires_supported_toolchain(tmp_path):
         comparator.runtime_for(tmp_path)
 
 
-def test_local_child_clears_credentials_and_drops_root(monkeypatch):
-    monkeypatch.setenv("INF_API_KEY", "test-secret-not-a-real-key")
-    monkeypatch.setenv("OPENAI_API_KEY", "test-secret-not-a-real-key")
-    with tempfile.TemporaryDirectory(prefix="dvp-local-test-") as temporary:
-        folder = Path(temporary)
-        folder.chmod(0o755)
-        (folder / "bin").mkdir()
-        (folder / "bin/lean").touch()
-        command = comparator.sandbox_command([
-            sys.executable, "-c",
-            "import json,os; print(json.dumps({'uid':os.getuid(),"
-            "'secret':any(k in os.environ for k in ['INF_API_KEY','OPENAI_API_KEY']),"
-            "'cwd':os.getcwd()}))",
-        ], workspace=folder, toolchain=folder, sandboxed=False)
-        status, stdout, stderr = asyncio.run(comparator.run_process(command, cwd=folder, timeout=10))
-        assert status == 0, stderr
-        assert json.loads(stdout) == {
-            "uid": 65534 if os.geteuid() == 0 else os.getuid(),
-            "secret": False, "cwd": str(folder),
-        }
-
-
 def load_adapter(monkeypatch):
     monkeypatch.setitem(sys.modules, "sandbox", sandbox)
     spec = importlib.util.spec_from_file_location(
@@ -130,38 +105,55 @@ def load_adapter(monkeypatch):
     return module
 
 
-def test_native_adapter_preserves_bwrap_and_seccomp_with_clean_environment(tmp_path, monkeypatch):
+@pytest.mark.parametrize("no_bwrap", [False, True])
+def test_native_adapter_removes_host_root_and_isolates_children(tmp_path, monkeypatch, no_bwrap):
     adapter = load_adapter(monkeypatch)
-    lake = tmp_path / "bin/lake"
-    lake.parent.mkdir()
-    lake.write_text("executable")
-    monkeypatch.setattr(adapter.shutil, "which",
-                        lambda name, path=None: "/usr/bin/bwrap" if name == "bwrap" else str(lake))
-    monkeypatch.setattr(adapter, "_seccomp_filter", lambda: 42)
+    toolchain, project, library = [tmp_path / name for name in ("toolchain", "project", "library")]
+    for path in (toolchain, project, library):
+        path.mkdir()
+    build = project / ".lake"
+    build.mkdir()
+    lake = toolchain / "bin/lake"
+    monkeypatch.setattr(adapter, "dependency_roots", lambda _: (library,))
     captured = {}
-    def execve(binary, arguments, environment):
-        captured.update(binary=binary, arguments=arguments, environment=environment)
-    monkeypatch.setattr(adapter.os, "execve", execve)
+    def run_isolated(command, **kwargs):
+        captured.update(command=command, **kwargs)
+        return 0
+    monkeypatch.setattr(adapter, "run_isolated", run_isolated)
     monkeypatch.setattr(sys, "argv", [
-        "adapter", "--ro-bind", "/", "/", "--proc", "/proc", "--clearenv",
-        "--setenv", "PATH", str(lake.parent), "--unshare-all", "--share-net",
+        "adapter", "--toolchain", str(toolchain), "--project", str(project),
+        *(["--no-bwrap"] if no_bwrap else []), "--",
+        "--ro-bind", "/", "/", "--proc", "/proc", "--clearenv",
+        "--ro-bind", str(project), str(project), "--bind", str(build), str(build),
+        "--chdir", str(project), "--setenv", "PATH", str(lake.parent),
+        "--unshare-all", "--share-net",
         "--", str(lake), "env",
     ])
-    adapter.main()
-    args = captured["arguments"]
-    assert captured["binary"] == "/usr/bin/bwrap"
-    assert args[args.index("--seccomp") + 1] == "42"
-    assert "--share-net" not in args and "--unshare-all" in args
-    assert args[args.index("--remount-ro") + 1] == "/proc"
-    assert "/proc/self/exe" in args and str(lake) in args
-    assert set(captured["environment"]) == {"PATH", "LANG"}
+    with pytest.raises(SystemExit) as exit_:
+        adapter.main()
+    assert exit_.value.code == 0
+    assert captured == {
+        "command": [str(lake), "env"], "toolchain": toolchain, "cwd": project,
+        "read_only": (project, library), "writable": (build,),
+        "environment": {"PATH": str(lake.parent)}, "sandboxed": not no_bwrap,
+        "read_cwd": False,
+    }
 
 
 def test_native_adapter_rejects_missing_isolation_arguments(tmp_path, monkeypatch):
     adapter = load_adapter(monkeypatch)
-    lake = tmp_path / "lake"
-    lake.touch()
-    monkeypatch.setattr(adapter.shutil, "which", lambda *a, **kw: str(lake))
-    monkeypatch.setattr(sys, "argv", ["adapter", "--setenv", "PATH", str(tmp_path), "--", "true"])
     with pytest.raises(RuntimeError, match="unexpected native Comparator sandbox"):
-        adapter.main()
+        adapter.parse_invocation(["--setenv", "PATH", str(tmp_path), "--", "true"])
+
+
+@pytest.mark.parametrize("unsafe", [
+    ["--bind", "/", "/"],
+    ["--ro-bind", "/trusted", "/different"],
+    ["--setenv", "LD_PRELOAD", "/untrusted.so"],
+])
+def test_native_adapter_rejects_unexpected_privilege_grants(monkeypatch, unsafe):
+    adapter = load_adapter(monkeypatch)
+    with pytest.raises(RuntimeError):
+        adapter.parse_invocation([
+            *unsafe, "--chdir", "/trusted", "--clearenv", "--unshare-all", "--", "lean",
+        ])

@@ -14,6 +14,7 @@ For installation by a coding agent, use the [agent instructions](agent-install.m
 | Lean / Lake | **4.35.0**, `leanprover/lean4:v4.35.0` |
 | Mathlib | Commit `56a005855ea17e0b0958f73ec801ae140b0a1679` |
 | Verification | Lean's bundled `lake comparator`, `leanexport`, and `leanchecker` |
+| Lean isolation | bubblewrap + seccomp, or Landlock + seccomp with `--no-sandbox` |
 | Model | Tool-calling API supported by LiteLLM |
 | Retrieval | LeanExplore **1.3.x**, snapshot `20261020_060431`, and matching models and sources |
 | Python experiments | NumPy, SymPy, mpmath, and working Landlock + seccomp isolation |

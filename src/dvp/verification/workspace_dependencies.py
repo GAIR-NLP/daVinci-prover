@@ -8,9 +8,28 @@ do not search for similarly named caches or substitute a different checkout.
 from __future__ import annotations
 
 from collections.abc import Mapping
+import json
 from pathlib import Path
 import re
 from typing import Any
+
+
+def dependency_roots(workspace: Path) -> tuple[Path, ...]:
+    """Read only the pinned dependency locations, never their shared parent."""
+    manifest_path = workspace / "lake-manifest.json"
+    if not manifest_path.is_file():
+        return ()
+    manifest = json.loads(manifest_path.read_text())
+    roots = []
+    for package in manifest.get("packages", []):
+        root = dependency_path(workspace, manifest, package)
+        if root == Path("/") or root in workspace.resolve().parents:
+            raise ValueError(f"Unsafe dependency read grant: {root}")
+        if not root.is_dir():
+            raise ValueError(f"Missing pinned dependency: {root}")
+        if root not in roots:
+            roots.append(root)
+    return tuple(roots)
 
 
 def _path_value(value: Any, field: str) -> Path:
