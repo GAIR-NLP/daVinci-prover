@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import re
-
 from dvp.toolkits.schemas import OPTIONAL_TOOL_NAMES, TOOL_NAMES
 
 _LEAN_BACKENDS = {
@@ -57,9 +55,3 @@ _NO_LOGICAL_VERIFIER_EVIDENCE = frozenset(
 _LOCAL_TIMEOUT_PREFIX = "Lean verification timed out after "
 
 _MISSING_LOCAL_VERIFIER = "RuntimeError: Could not find `lake` or `lean` on PATH"
-
-_NAMED_AUXILIARY_DECLARATION_RE = re.compile(
-    r"(?m)^[ \t]*(?:@\[[^\]]*\][ \t\r\n]*)*"
-    r"(?:(?:private|protected|noncomputable|unsafe)[ \t\r\n]+)*"
-    r"(?:lemma|theorem)[ \t\r\n]+\S+"
-)

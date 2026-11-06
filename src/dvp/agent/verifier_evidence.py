@@ -82,17 +82,6 @@ def _raw_source_placeholder_count(raw: dict[str, Any]) -> int | None:
     return None
 
 
-def _raw_hole_count(raw: dict[str, Any]) -> int | None:
-    for candidate in _verifier_candidates(raw):
-        value = candidate.get("holes")
-        if not isinstance(value, dict):
-            continue
-        total = value.get("total")
-        if isinstance(total, int) and not isinstance(total, bool) and total >= 0:
-            return total
-    return None
-
-
 def _raw_draft_typechecked(raw: dict[str, Any]) -> bool:
     return _raw_verification_profile(raw) == "draft_allow_sorry" and any(
         candidate.get("draft_typechecked") is True

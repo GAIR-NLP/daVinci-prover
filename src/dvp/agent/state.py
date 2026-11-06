@@ -68,7 +68,6 @@ def build_observation(
     episode_id: str,
     theorem_statement: str,
     tools: list[dict[str, Any]],
-    guidance: list[str],
 ) -> Observation:
     budget = config.budget
     lean_remaining = (
@@ -99,7 +98,6 @@ def build_observation(
             "finalized": state.finalized,
             "max_consecutive_output_truncations": config.max_consecutive_output_truncations,
             "retain_truncated_thinking": config.retain_truncated_thinking,
-            "history_policy": config.history_policy,
             "remaining": {
                 "turns": max(0, budget.max_turns - state.turns),
                 "tool_calls": max(0, budget.max_tool_calls - state.tool_calls),
@@ -135,7 +133,6 @@ def build_observation(
             "config_id": config.config_id,
         },
         tools=tools,
-        guidance=guidance,
         last_outcomes=[item.to_dict() for item in state.last_outcomes],
     )
 

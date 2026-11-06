@@ -86,10 +86,7 @@ class ProverDriver:
                 outcome for outcome in transition.outcomes
                 if outcome.error_kind == "output_truncated"
             ]
-            selective_recovery = (
-                self.episode.config.history_policy == "current"
-                and bool(format_errors or truncations)
-            )
+            selective_recovery = bool(format_errors or truncations)
             if selective_recovery:
                 self.messages.pop()
                 retained = None
@@ -125,19 +122,9 @@ class ProverDriver:
                     path_aliases=self._feedback_path_aliases(),
                 )
             else:
-                # Legacy retains the assistant message already appended above,
-                # with normal paired results even for rejected tool calls.
-                if (
-                    not action.tool_calls
-                    and not action.content.strip()
-                    and (
-                        self.episode.config.history_policy == "current"
-                        or not action.reasoning_content.strip()
-                    )
-                ):
+                if not action.tool_calls and not action.content.strip():
                     # A thinking-only stop gets one reminder without feeding its
-                    # private text back into the next request. Legacy still keeps
-                    # thinking, but no policy sends a completely empty entry.
+                    # private text back into the next request.
                     self.messages.pop()
                     self.rejected_responses.append({
                         "turn": turn, "response": deepcopy(action.raw),
@@ -155,11 +142,6 @@ class ProverDriver:
                     self.messages.append({"role": "user", "content": "\n".join(feedback)})
                 return self.episode.result()
 
-            state_feedback = "\n".join(
-                text for item in observation.guidance if (text := item.strip())
-            )
-            if state_feedback:
-                feedback.append(state_feedback)
             if feedback:
                 self.messages.append({"role": "user", "content": "\n".join(feedback)})
 

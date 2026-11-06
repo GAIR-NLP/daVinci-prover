@@ -44,10 +44,9 @@ def driver_for(episode, responses):
     return ProverDriver(client, episode, STATEMENT, verbose=False), requests
 
 
-@pytest.mark.parametrize("history_policy", ["current", "legacy"])
 @pytest.mark.parametrize("content", ["I could not finish this proof.", "The proof is complete."])
-def test_first_visible_final_response_ends_rollout_then_grades_saved_file(tmp_path, history_policy, content):
-    episode, verifier, comparator, sink = make_episode(tmp_path, config=EpisodeConfig(history_policy=history_policy))
+def test_first_visible_final_response_ends_rollout_then_grades_saved_file(tmp_path, content):
+    episode, verifier, comparator, sink = make_episode(tmp_path)
     final = response(content, reasoning_content="My final assessment.")
     driver, requests = driver_for(episode, [(final, "stop")])
     result = asyncio.run(driver.run())
@@ -65,11 +64,10 @@ def test_first_visible_final_response_ends_rollout_then_grades_saved_file(tmp_pa
     assert sum(item["event"] == "end" for item in sink.events) == 1
 
 
-@pytest.mark.parametrize("history_policy", ["current", "legacy"])
 @pytest.mark.parametrize("fields", [{}, {"reasoning_content": "I am still thinking."}])
-def test_empty_response_gets_one_reminder_then_final_grade(tmp_path, history_policy, fields):
+def test_empty_response_gets_one_reminder_then_final_grade(tmp_path, fields):
     episode, verifier, comparator, _ = make_episode(tmp_path, config=EpisodeConfig(
-        history_policy=history_policy, retain_truncated_thinking=True,
+        retain_truncated_thinking=True,
     ))
     episode.sink = NullTrajectorySink()
     first, second = response(" \n", **fields), response(**fields)
@@ -82,15 +80,11 @@ def test_empty_response_gets_one_reminder_then_final_grade(tmp_path, history_pol
     assert len(reminders) == 1
     assert "resend a complete tool call" in reminders[0]["content"]
     assert requests[1]["messages"][-1] == reminders[0]
-    if fields and history_policy == "legacy":
-        assert first in requests[1]["messages"]
-        assert driver.rejected_responses == []
-    else:
-        assert not any(item["role"] == "assistant" for item in requests[1]["messages"])
-        saved = build_conversation_artifact(driver=driver, episode=episode, client=driver.client, result=result.to_dict())
-        assert [item["response"] for item in saved["rejected_responses"]] == [
-            {**first, "finish_reason": "stop"}, {**second, "finish_reason": "stop"},
-        ]
+    assert not any(item["role"] == "assistant" for item in requests[1]["messages"])
+    saved = build_conversation_artifact(driver=driver, episode=episode, client=driver.client, result=result.to_dict())
+    assert [item["response"] for item in saved["rejected_responses"]] == [
+        {**first, "finish_reason": "stop"}, {**second, "finish_reason": "stop"},
+    ]
     verifier.verify_file.assert_not_awaited()
     comparator.verify.assert_awaited_once()
 

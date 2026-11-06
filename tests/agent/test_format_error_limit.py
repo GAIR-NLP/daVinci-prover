@@ -89,11 +89,8 @@ def assert_format_failure(result):
     assert not _result_is_infrastructure(result.to_dict())
 
 
-@pytest.mark.parametrize("guidance", ["soft", "off"])
-def test_driver_stops_after_three_malformed_tool_responses(tmp_path, guidance):
-    episode, verifier, comparator, _ = make_episode(
-        tmp_path, config=EpisodeConfig(guidance=guidance),
-    )
+def test_driver_stops_after_three_malformed_tool_responses(tmp_path):
+    episode, verifier, comparator, _ = make_episode(tmp_path)
     response = {
         "role": "assistant", "content": "I will inspect the proof.",
         "tool_calls": [native_call("file_read", '{"file_path":')],
@@ -355,11 +352,10 @@ def test_length_keeps_unfinished_thinking_but_discards_malformed_calls(tmp_path,
     assert response == original
 
 
-@pytest.mark.parametrize("guidance", ["soft", "off"])
 @pytest.mark.parametrize("retain", [False, True])
-def test_driver_recovers_after_three_truncated_thinking_turns_with_selected_history(tmp_path, guidance, retain):
+def test_driver_recovers_after_three_truncated_thinking_turns_with_selected_history(tmp_path, retain):
     episode, _, _, sink = make_episode(tmp_path, config=EpisodeConfig(
-        budget=BudgetConfig(max_turns=4), guidance=guidance,
+        budget=BudgetConfig(max_turns=4),
         max_consecutive_format_errors=1, retain_truncated_thinking=retain,
     ))
     responses = [
@@ -406,10 +402,9 @@ def test_driver_recovers_after_three_truncated_thinking_turns_with_selected_hist
 @pytest.mark.parametrize("kind", [
     "response_format_error", "tool_parse_error", "capability_disabled", "invalid_arguments", "synthetic",
 ])
-@pytest.mark.parametrize("guidance", ["soft", "off"])
-def test_format_recovery_drops_rejected_thinking_but_keeps_lean_failure_and_sft_log(tmp_path, kind, guidance):
+def test_format_recovery_drops_rejected_thinking_but_keeps_lean_failure_and_sft_log(tmp_path, kind):
     episode, _, comparator, _ = make_episode(tmp_path, config=EpisodeConfig(
-        budget=BudgetConfig(max_turns=4), guidance=guidance,
+        budget=BudgetConfig(max_turns=4),
     ))
     # SFT collection has no full trajectory; raw rejected replies must still survive.
     episode.sink = NullTrajectorySink()

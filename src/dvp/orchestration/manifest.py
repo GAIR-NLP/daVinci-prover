@@ -95,7 +95,6 @@ def build_run_manifest(
             "stop_token_ids": args.stop_token_ids,
         },
         "episode": {
-            "guidance": episode_config.guidance,
             "enable_lean_retrieve": episode_config.enable_lean_retrieve,
             "abort_on_infrastructure_error": (
                 episode_config.abort_on_infrastructure_error
@@ -104,7 +103,6 @@ def build_run_manifest(
             "max_consecutive_format_errors": episode_config.max_consecutive_format_errors,
             "max_consecutive_output_truncations": episode_config.max_consecutive_output_truncations,
             "retain_truncated_thinking": episode_config.retain_truncated_thinking,
-            "history_policy": episode_config.history_policy,
             "budget": asdict(episode_config.budget),
         },
         "services": {

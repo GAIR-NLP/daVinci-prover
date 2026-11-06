@@ -145,7 +145,7 @@ def test_repeated_verification_cannot_bypass_budget(make_episode, budget, error_
 
 @pytest.mark.parametrize("same_turn", [True, False])
 @pytest.mark.parametrize("draft", [True, False])
-def test_repeated_target_diagnostics_keep_evidence_without_strategy_nudges(
+def test_repeated_target_diagnostics_keep_evidence(
     make_episode, same_turn, draft,
 ):
     candidate = THEOREM if draft else THEOREM.replace("sorry", "trivial")
@@ -172,7 +172,6 @@ def test_repeated_target_diagnostics_keep_evidence_without_strategy_nudges(
     assert state["tool_calls_used"] == state["lean_calls_used"] == 2
     assert state["last_target_error"] == "True"
     assert state["last_target_error_kind"] == ("draft_hole" if draft else "unsolved_goals")
-    assert all(transition.next_observation.guidance == [] for transition in transitions)
     assert all(not transition.terminated and not transition.truncated for transition in transitions)
     assert not {"last_outcome_signature_count", "last_error_signature_count", "last_target_error_count"} & state.keys()
     evidence_key = "holes" if draft else "errors"

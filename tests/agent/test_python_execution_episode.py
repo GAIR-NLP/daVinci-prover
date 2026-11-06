@@ -152,14 +152,13 @@ def test_repeated_python_calls_run_again_and_consume_each_tool_call(tmp_path, sa
     assert_no_proof_evidence(episode, verifier, comparator)
 
 
-@pytest.mark.parametrize("history_policy", ["current", "legacy"])
-def test_python_output_limits_keep_assistant_history_and_paired_tool_results(tmp_path, history_policy):
+def test_python_output_limits_keep_assistant_history_and_paired_tool_results(tmp_path):
     runner = executor(PythonExecutionResult(
         status="output_limit", returncode=-9, stdout="partial results\n",
     ))
     episode, verifier, comparator = episode_at(tmp_path, runner, max_turns=3)
     episode.config = replace(
-        episode.config, history_policy=history_policy,
+        episode.config,
         max_consecutive_output_truncations=1, retain_truncated_thinking=False,
     )
     requests = []

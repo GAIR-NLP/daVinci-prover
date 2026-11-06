@@ -6,13 +6,12 @@ import hashlib
 import json
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from dvp.runtime.python_execution import PythonExecutor
 
 
-GuidanceMode = Literal["off", "soft"]
 # Changing final acceptance must invalidate manifests from the previous verifier.
 DVP_POLICY_VERSION = "dvp.policy.comparator.v4"
 
@@ -39,10 +38,9 @@ class EpisodeConfig:
     """Versioned episode semantics shared by inference and RL."""
 
     budget: BudgetConfig = field(default_factory=BudgetConfig)
-    guidance: GuidanceMode = "off"
     abort_on_infrastructure_error: bool = True
     max_tool_result_chars: int = 12_000
-    schema_version: str = "dvp.episode.v12"
+    schema_version: str = "dvp.episode.v13"
     policy_version: str = DVP_POLICY_VERSION
     enable_lean_retrieve: bool = True
     # Match mini-SWE-agent: stop after three consecutive malformed responses;
@@ -54,13 +52,8 @@ class EpisodeConfig:
     # Partial reasoning retention is opt-in. This is context retention, not
     # native token-level or signed-block continuation.
     retain_truncated_thinking: bool = False
-    # Legacy keeps normalized assistant/tool exchanges even after rejected
-    # actions. Resource limits remain independent of the history policy.
-    history_policy: Literal["current", "legacy"] = "current"
 
     def __post_init__(self) -> None:
-        if self.guidance not in {"off", "soft"}:
-            raise ValueError(f"unsupported guidance mode: {self.guidance}")
         if self.max_tool_result_chars < 512:
             raise ValueError("max_tool_result_chars must be at least 512")
         if not self.policy_version.strip():
@@ -79,8 +72,6 @@ class EpisodeConfig:
             raise ValueError("max_consecutive_output_truncations must be a non-negative integer")
         if not isinstance(self.retain_truncated_thinking, bool):
             raise ValueError("retain_truncated_thinking must be a boolean")
-        if self.history_policy not in ("current", "legacy"):
-            raise ValueError("history_policy must be current or legacy")
 
     @property
     def config_id(self) -> str:

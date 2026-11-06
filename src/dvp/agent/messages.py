@@ -9,9 +9,28 @@ from typing import Any, Mapping
 from dvp.llm_clients.parser import assistant_action_to_history
 from dvp.protocol import AssistantAction, Transition, decode_tool_arguments
 
-from .guidance import no_tool_feedback
 from .policy import _FORMAT_ERROR_KINDS
 from .result_projection import _outcome_for_model
+
+
+def no_tool_feedback(finish_reason: Any) -> str:
+    """Explain missing or incomplete tool calls so the model can correct them."""
+    if finish_reason == "length":
+        return (
+            "The response reached the output token limit "
+            "(finish_reason=length). Continue from saved files and tool results. "
+            "Use smaller steps. Incomplete calls were not executed; resend them "
+            "with complete JSON arguments."
+        )
+    if finish_reason == "tool_calls":
+        return (
+            "No parseable tool call was received; no tool was executed. "
+            "Resend with an available tool name and a complete JSON argument object."
+        )
+    return (
+        "No visible response or tool call was received. "
+        "Continue with text or a tool call."
+    )
 
 
 def _assistant_history_message(action: AssistantAction) -> dict[str, Any]:

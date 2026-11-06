@@ -109,7 +109,6 @@ class Observation:
     task: dict[str, Any]
     state: dict[str, Any]
     tools: list[dict[str, Any]]
-    guidance: list[str] = field(default_factory=list)
     last_outcomes: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:

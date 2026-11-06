@@ -165,12 +165,11 @@ def test_mixed_unknown_tool_feedback_does_not_deny_other_executed_calls(tmp_path
     assert "sorry" in episode.tools.workspace.submission_file.read_text()
 
 
-@pytest.mark.parametrize("history_policy", ["current", "legacy"])
 @pytest.mark.parametrize("first_calls", [
     {"bad": "container"},
     [native_call("file_read", {"file_path": "Submission.lean"}, "good"), {"id": "missing-name", "function": {}}],
 ])
-def test_standard_chat_response_recovers_with_valid_history(monkeypatch, tmp_path, history_policy, first_calls):
+def test_standard_chat_response_recovers_with_valid_history(monkeypatch, tmp_path, first_calls):
     requests = []
 
     def handler(request):
@@ -203,7 +202,6 @@ def test_standard_chat_response_recovers_with_valid_history(monkeypatch, tmp_pat
     transport = httpx.MockTransport(handler)
     monkeypatch.setattr(llm, "AsyncClient", lambda **kw: original_client(transport=transport, **kw))
     episode = episode_at(tmp_path)
-    episode.config = EpisodeConfig(history_policy=history_policy, budget=episode.config.budget)
     client = llm.LiteLLMClient(model="test", api_key=None, base_url="https://provider.invalid/v1", max_retries=0)
     result = asyncio.run(ProverDriver(client, episode, "example : True := by sorry", verbose=False).run_rollout())
 

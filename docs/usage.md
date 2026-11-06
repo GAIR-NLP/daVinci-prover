@@ -153,11 +153,12 @@ responses reset the format/truncation counters. Set
 `--max-consecutive-format-errors` or `--max-consecutive-output-truncations` to `0`
 to disable that guard. Ordinary turn, tool, and time limits remain active.
 
-With default `--history-policy current`, normal tool exchanges retain reasoning.
+Normal tool exchanges retain reasoning.
 Thinking-only replies and malformed calls are archived but omitted from subsequent
 history; corrections report any valid calls that already executed. DVP cannot
-recover tool calls discarded by the model service. Extra workflow guidance is
-off by default; no per-turn countdown is injected.
+recover tool calls discarded by the model service. No extra workflow guidance or
+per-turn countdown is injected; empty-response reminders and protocol-error
+corrections remain active.
 
 After normal completion or a development limit, Comparator grades saved files
 once, outside `--task-timeout`, using a separate `--lean-timeout`. Its verdict
@@ -171,13 +172,6 @@ unfinished reasoning. Setting it to `true` retains reasoning unless it contains
 an extreme repeated-character span. Incomplete calls are never executed.
 Recovery uses a new request, not token-level continuation. Full traces preserve
 the original output; `conversation.json.rejected_responses` records filtered replies.
-
-### Legacy history comparison
-
-`--history-policy legacy` retains normalized assistant replies, including
-truncated thinking and rejected calls, and overrides `--retain-truncated-thinking`.
-It does not change current completion rules or restore older tool behavior.
-Use a new run directory for comparisons.
 
 ## Distributed Inference and Prefix Caching
 

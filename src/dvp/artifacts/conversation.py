@@ -8,7 +8,7 @@ from typing import Any, Mapping
 from dvp.protocol import jsonable
 
 
-CONVERSATION_SCHEMA_VERSION = "dvp.conversation.v3"
+CONVERSATION_SCHEMA_VERSION = "dvp.conversation.v4"
 
 _CLIENT_SAMPLING_FIELDS = (
     "model",
@@ -45,9 +45,7 @@ def build_conversation_artifact(
     ``retain_truncated_thinking`` retains it unless severe repetition is detected.
     This is context retention in a
     new request, not native token-level continuation. Filtered raw replies remain
-    in ``rejected_responses`` without resending malformed tool calls. The legacy
-    history policy keeps normalized assistant/tool exchanges, including rejected actions, directly
-    in ``messages``; those retained replies are not discarded-response entries.
+    in ``rejected_responses`` without resending malformed tool calls.
     """
 
     config = getattr(episode, "config", None)
@@ -68,7 +66,6 @@ def build_conversation_artifact(
             "max_consecutive_format_errors": getattr(config, "max_consecutive_format_errors", 3),
             "max_consecutive_output_truncations": getattr(config, "max_consecutive_output_truncations", 5),
             "retain_truncated_thinking": getattr(config, "retain_truncated_thinking", False),
-            "history_policy": getattr(config, "history_policy", "current"),
             "episode_id": getattr(episode, "episode_id", None),
         },
         "metadata": jsonable(dict(metadata or {})),

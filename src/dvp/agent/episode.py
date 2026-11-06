@@ -3,8 +3,8 @@
 There are intentionally no proof-failure phase switches or forced strategy
 gates in this module. Consecutive malformed responses have a bounded retry
 allowance. The episode enforces safety/resource invariants, executes
-tools, turns their heterogeneous legacy results into one protocol, and exposes
-verified facts.  A policy is free to use or ignore the soft guidance.
+tools, turns their heterogeneous results into one protocol, and exposes
+verified facts.
 """
 
 from __future__ import annotations
@@ -33,7 +33,8 @@ from dvp.toolkits.surface import CompatibilitySurface, Dispatch
 from dvp.verification.comparator import ComparatorVerifier
 from dvp.verification.lean import LeanVerifier
 
-from . import automatic_checks, candidate, completion, facts, guidance, outcomes, state
+from . import automatic_checks, candidate, completion, facts, outcomes, state
+from .messages import no_tool_feedback
 from .policy import _FORMAT_ERROR_KINDS, _LEAN_BACKENDS, _TOOL_NAME_SET
 from .state import EpisodeState
 
@@ -120,13 +121,11 @@ class ProverEpisode:
                         "max_lean_calls": self.config.budget.max_lean_calls,
                     },
                     "enable_lean_retrieve": self.config.enable_lean_retrieve,
-                    "guidance": self.config.guidance,
                     "abort_on_infrastructure_error": self.config.abort_on_infrastructure_error,
                     "max_tool_result_chars": self.config.max_tool_result_chars,
                     "max_consecutive_format_errors": self.config.max_consecutive_format_errors,
                     "max_consecutive_output_truncations": self.config.max_consecutive_output_truncations,
                     "retain_truncated_thinking": self.config.retain_truncated_thinking,
-                    "history_policy": self.config.history_policy,
                 },
                 # Retain the source bytes represented by the task string for
                 # deterministic workspace replay. The observation keeps the
@@ -163,7 +162,6 @@ class ProverEpisode:
             episode_id=self.episode_id,
             theorem_statement=self.theorem_statement,
             tools=self.tool_schemas(),
-            guidance=guidance.guidance(self),
         )
 
     async def step(self, action: AssistantAction) -> Transition:
@@ -257,10 +255,10 @@ class ProverEpisode:
         finish_reason = action.raw.get("finish_reason")
         if finish_reason == "length":
             error_kind = "output_truncated"
-            feedback = guidance.no_tool_feedback("length")
+            feedback = no_tool_feedback("length")
         elif finish_reason == "tool_calls" or action.raw.get("tool_calls"):
             error_kind = "tool_parse_error"
-            feedback = guidance.no_tool_feedback("tool_calls")
+            feedback = no_tool_feedback("tool_calls")
         elif looks_like_tool_call_text(
             action.content if action.content.strip() else action.reasoning_content,
         ):

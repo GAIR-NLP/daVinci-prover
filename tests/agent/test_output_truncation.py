@@ -355,3 +355,32 @@ def test_truncation_budget_exit_grades_saved_source_after_whole_batch(tmp_path, 
     assert transition.outcomes[-1].executed
     assert (episode.tools.workspace.submission_dir / "after.txt").exists()
     comparator.verify.assert_awaited_once()
+
+
+@pytest.mark.parametrize("finish", ["tool_calls", "length"])
+def test_history_reaches_next_request_after_four_recoverable_replies(tmp_path, finish):
+    episode, verifier, comparator, _ = make_episode(tmp_path, config=EpisodeConfig(
+        retain_truncated_thinking=False,
+        max_consecutive_format_errors=0, max_consecutive_output_truncations=0,
+        budget=BudgetConfig(max_turns=5),
+    ))
+    replies = [({"role": "assistant", "content": f"partial {i}",
+                 "reasoning_content": f"derivation {i}"}, finish) for i in range(4)]
+    replies.append(({"role": "assistant", "content": "", "tool_calls": [
+        native_call("file_read", {"file_path": "Submission.lean"}),
+    ]}, "tool_calls"))
+    client, requests = scripted_client(replies)
+    driver = ProverDriver(client, episode, STATEMENT, verbose=False)
+    result = asyncio.run(driver.run_rollout())
+    assert result.reason == "max_turns" and result.turns == 5 and result.tool_calls == 1
+    history = [m for m in requests[4]["messages"] if m["role"] == "assistant"]
+    if finish == "length":
+        assert history == [{"role": "assistant", "content": f"partial {i}"} for i in range(4)]
+        assert len(driver.rejected_responses) == 4
+        assert [item["response"]["reasoning_content"] for item in driver.rejected_responses] == [
+            f"derivation {i}" for i in range(4)
+        ]
+    else:
+        assert history == [] and len(driver.rejected_responses) == 4
+    verifier.verify_file.assert_not_awaited()
+    comparator.verify.assert_not_awaited()

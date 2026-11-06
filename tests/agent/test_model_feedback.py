@@ -8,7 +8,6 @@ import pytest
 
 from dvp.agent.driver import ProverDriver
 from dvp.agent.result_projection import _compact, _json
-from dvp.config import EpisodeConfig
 from test_format_error_limit import CANDIDATE, STATEMENT, make_episode, native_call
 from test_output_truncation import scripted_client
 
@@ -121,12 +120,8 @@ def test_imported_helper_holes_remain_visible_when_entry_has_no_holes(budget):
     assert len(_json(result)) <= budget
 
 
-@pytest.mark.parametrize("policy", ["current", "legacy"])
-@pytest.mark.parametrize("guidance", ["off", "soft"])
-def test_actual_next_requests_hide_scoring_without_changing_acceptance(tmp_path, policy, guidance):
-    episode, verifier, comparator, sink = make_episode(
-        tmp_path, config=EpisodeConfig(history_policy=policy, guidance=guidance),
-    )
+def test_actual_next_requests_hide_scoring_without_changing_acceptance(tmp_path):
+    episode, verifier, comparator, sink = make_episode(tmp_path)
     verifier.verify_code.return_value = {
         "success": True, "errors": [], "returncode": 0,
         "verification_profile": "strict", "strict_verified": True,

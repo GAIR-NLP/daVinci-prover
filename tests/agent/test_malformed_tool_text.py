@@ -172,7 +172,7 @@ def test_ordinary_visible_completion_and_quoted_examples_keep_completion_semanti
 
 def test_current_history_excludes_malformed_tool_text_and_keeps_rejection_evidence(tmp_path):
     episode, verifier, comparator, _ = make_episode(tmp_path, config=EpisodeConfig(
-        history_policy="current", budget=BudgetConfig(max_turns=2),
+        budget=BudgetConfig(max_turns=2),
     ))
     malformed = response(MALFORMED_DSML, reasoning_content="This lookup will help continue the proof.")
     driver, requests = driver_for(episode, [

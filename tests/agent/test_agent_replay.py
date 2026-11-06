@@ -292,11 +292,6 @@ def _scenarios():
             ],
             "tools": [{"success": True, "content": THEOREM}],
         },
-        "guidance_off": {
-            "messages": [_message(_call("lean_verify", {"code": DRAFT})), success],
-            "tools": [draft, _strict()],
-            "config": {"guidance": "off"},
-        },
         "fixed_contract_success": {
             "messages": [success],
             "fixed_contract": True,
@@ -341,7 +336,7 @@ def _scenarios():
     # These controlled v4 success fixtures explicitly save their final source.
     # An inline lean_verify result alone must never become the submission.
     saved = {
-        "strict_success", "draft_then_success", "auxiliary_then_success", "guidance_off",
+        "strict_success", "draft_then_success", "auxiliary_then_success",
         "fixed_contract_success", "completion_budget", "completion_mismatch",
         "completion_timeout", "completion_infrastructure", "completion_compiler_forgery",
     }
@@ -549,38 +544,36 @@ def _subprocess_replay(scenario, pythonpath, *, config_defaults=None):
 
 
 def _execution_behavior(record):
-    """Exclude only the two changed defaults and their display/provenance fields.
+    """Exclude the thinking-retention setting and its configuration identity.
 
     Every transition action, outcome, reward, budget, and termination field is
     retained, as are the actual tool/Comparator calls, results, and file bytes.
-    Tool schemas are retained too; only model-visible guidance is excluded.
+    Tool schemas and all model-visible observations are retained too.
     """
     execution = deepcopy({key: record[key] for key in EXECUTION_RECORD_KEYS})
     for event in execution["events"]:
         payload = event["payload"]
         if event["event"] == "start":
             payload.pop("config_id")
-            payload["config"].pop("guidance")
             payload["config"].pop("retain_truncated_thinking")
         for name in ("observation", "next_observation"):
             if name not in payload:
                 continue
             observation = payload[name]
-            observation.pop("guidance")
             observation["state"].pop("config_id")
             observation["state"].pop("retain_truncated_thinking")
     return execution
 
 
 @pytest.mark.parametrize("scenario", list(_scenarios()))
-def test_changed_history_defaults_preserve_fixed_response_execution(scenario):
+def test_thinking_retention_preserves_complete_response_execution(scenario):
     root = Path(__file__).resolve().parents[2]
     current = _subprocess_replay(scenario, root / "src")
-    previous = _subprocess_replay(scenario, root / "src", config_defaults={
-        "guidance": "soft", "retain_truncated_thinking": True,
+    retained = _subprocess_replay(scenario, root / "src", config_defaults={
+        "retain_truncated_thinking": True,
     })
-    assert len(current["requests"]) == len(previous["requests"])
-    assert _execution_behavior(current) == _execution_behavior(previous)
+    assert len(current["requests"]) == len(retained["requests"])
+    assert _execution_behavior(current) == _execution_behavior(retained)
 
 
 @pytest.mark.parametrize("scenario", list(_scenarios()))
@@ -591,7 +584,7 @@ def test_v4_replay_is_deterministic_and_grades_only_saved_source(scenario):
     assert actual == repeated
     start = actual["events"][0]["payload"]
     assert start["config"]["policy_version"] == "dvp.policy.comparator.v4"
-    assert start["observation"]["schema_version"] == "dvp.episode.v12"
+    assert start["observation"]["schema_version"] == "dvp.episode.v13"
     rollout, result = actual["rollout"], actual["result"]
     assert not rollout["success"] and rollout["score"] == 0
     assert result["rollout_reason"] == rollout["reason"]

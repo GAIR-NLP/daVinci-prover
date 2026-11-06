@@ -78,7 +78,7 @@ def test_manifest_and_conversation_record_limit_and_resume_rejects_change(tmp_pa
 
     assert default["episode"]["max_consecutive_output_truncations"] == 5
     assert changed["episode"]["max_consecutive_output_truncations"] == limit
-    assert changed["schema_version"] == default["schema_version"] == "dvp.episode.v12"
+    assert changed["schema_version"] == default["schema_version"] == "dvp.episode.v13"
     assert changed["episode"]["budget"] == default["episode"]["budget"]
     with pytest.raises(ValueError, match="config_id.*episode"):
         validate_resume_manifest(default, changed)
@@ -90,7 +90,7 @@ def test_manifest_and_conversation_record_limit_and_resume_rejects_change(tmp_pa
     )
     assert saved["episode"]["max_consecutive_output_truncations"] == limit
     assert saved["episode"]["config_id"] == changed["config_id"]
-    assert saved["schema_version"] == "dvp.conversation.v3"
+    assert saved["schema_version"] == "dvp.conversation.v4"
 
 
 def test_conversation_without_episode_config_records_the_default_limit():

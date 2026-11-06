@@ -27,7 +27,7 @@ def test_generation_records_are_independent_deep_snapshots():
     assert metadata["available"] is True
     assert metadata["calls"] == records
     assert saved["messages"] == [{"role": "assistant", "content": "ok"}]
-    assert saved["schema_version"] == "dvp.conversation.v3"
+    assert saved["schema_version"] == "dvp.conversation.v4"
     assert saved["rejected_responses"] == []
     assert set(metadata) == {"available", "calls"}
 

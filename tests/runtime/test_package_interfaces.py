@@ -59,14 +59,25 @@ def test_single_and_batch_commands_share_episode_options(limit):
     from dvp.orchestration.config import episode_config_from_args
 
     arguments = ["--max-consecutive-format-errors", str(limit), "--max-turns", "11",
-                 "--lean-retrieve", "false", "--guidance", "off"]
+                 "--lean-retrieve", "false"]
     single = episode_config_from_args(prove_parser().parse_args(arguments))
     batch = episode_config_from_args(eval_parser().parse_args(arguments))
     assert single == batch
     assert batch.max_consecutive_format_errors == limit
     assert batch.budget.max_turns == 11
     assert not batch.enable_lean_retrieve
-    assert batch.guidance == "off"
+
+
+@pytest.mark.parametrize("command", ["evaluate", "prove"])
+@pytest.mark.parametrize("arguments", [
+    ["--history-policy", "current"], ["--history-policy", "legacy"],
+    ["--guidance", "off"], ["--guidance", "soft"],
+])
+def test_removed_history_and_guidance_options_are_rejected(command, arguments):
+    parser = cli.importlib.import_module(f"dvp.cli.{command}").build_parser()
+    with pytest.raises(SystemExit) as error:
+        parser.parse_args(arguments)
+    assert error.value.code == 2
 
 
 def test_lean_resources_are_available_at_the_packaged_location():

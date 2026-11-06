@@ -170,21 +170,9 @@ def add_runtime_options(parser: argparse.ArgumentParser) -> None:
         help=(
             "Keep reasoning from output-truncated responses in the next request's "
             "history (default: false). When enabled, clearly repetitive reasoning "
-            "is still excluded under the current history policy. "
-            "Visible partial text is retained in either mode; malformed tool "
-            "calls are never resent. This does not change recovery counters "
+            "is still excluded. Usable visible partial text is retained; malformed "
+            "tool calls are never resent. This does not change recovery counters "
             "or enable native token-level continuation."
-        ),
-    )
-    parser.add_argument(
-        "--history-policy",
-        choices=("current", "legacy"),
-        default="current",
-        help=(
-            "Response history policy: current uses selective truncation recovery; "
-            "legacy keeps normalized assistant/tool exchanges, including replies "
-            "without tools and rejected calls. Limits are configured separately. "
-            "Legacy overrides --retain-truncated-thinking."
         ),
     )
     parser.add_argument(
@@ -207,15 +195,6 @@ def add_runtime_options(parser: argparse.ArgumentParser) -> None:
         type=int,
         default=12_000,
         help="Maximum raw tool-result text exposed in an observation.",
-    )
-    parser.add_argument(
-        "--guidance",
-        choices=("off", "soft"),
-        default="off",
-        help=(
-            "Optional advisory workflow hints (default: off). Tool diagnostics "
-            "and protocol-error feedback remain available in either mode."
-        ),
     )
     parser.add_argument(
         "--max-tokens", type=int, default=_env_int("DAVINCI_MAX_TOKENS"),
