@@ -28,7 +28,7 @@ Let your coding agent follow the [installation instructions](docs/agent-install.
 Or install manually:
 
 ```bash
-git clone https://github.com/zwhong714/daVinci-prover.git
+git clone https://github.com/GAIR-NLP/daVinci-prover.git
 cd daVinci-prover
 python3.12 -m venv .venv
 source .venv/bin/activate

@@ -13,9 +13,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/zwhong714/daVinci-prover"
-Documentation = "https://github.com/zwhong714/daVinci-prover/tree/main/docs"
-Repository = "https://github.com/zwhong714/daVinci-prover"
+Homepage = "https://github.com/GAIR-NLP/daVinci-prover"
+Documentation = "https://github.com/GAIR-NLP/daVinci-prover/tree/main/docs"
+Repository = "https://github.com/GAIR-NLP/daVinci-prover"
 
 [project.optional-dependencies]
 python-experiments = [

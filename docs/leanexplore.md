@@ -87,7 +87,7 @@ Use the published assets below for deployment.
 
 ## Preparing models and source on a new machine
 
-With the local extra installed above, download the archives, `SHA256SUMS`, `models-manifest.json`, and `fetch_models.py` from the [LeanExplore 4.35 release](https://github.com/zwhong714/daVinci-prover/releases/tag/leanexplore-4.35.0-20261020_060431). Its attached `INSTALL.md` contains the full procedure. From a checkout without conflicting assets at these paths:
+With the local extra installed above, download the archives, `SHA256SUMS`, `models-manifest.json`, and `fetch_models.py` from the [LeanExplore 4.35 release](https://github.com/GAIR-NLP/daVinci-prover/releases/tag/leanexplore-4.35.0-20261020_060431). Its attached `INSTALL.md` contains the full procedure. From a checkout without conflicting assets at these paths:
 
 ```bash
 export DVP_ROOT="$PWD"
