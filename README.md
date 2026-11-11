@@ -6,11 +6,11 @@
 [![Model](https://img.shields.io/badge/Model-4d5eff?style=for-the-badge&logo=huggingface&logoColor=ffffff&labelColor)]()
 </div>
 
-A single-agent Lean theorem-proving harness with LiteLLM model calls, local LeanExplore retrieval, compiler feedback, and final acceptance through Lean's **Comparator**.
+A single-agent Lean theorem-proving harness with local LeanExplore retrieval, compiler feedback, and final acceptance through Lean's **Comparator**.
 
 ## Performance
 
-Pass rates (%) using `DeepSeek-V4.1-flash-1012` within 200 interaction turns per problem.
+Pass@1 (%) using `DeepSeek-V4.1-flash-1012`, with a limit of 200 interaction turns per problem.
 
 | Benchmark | daVinci-Prover | Claude Code | Codex | DeepSeek Harness |
 | --- | ---: | ---: | ---: | ---: |
@@ -116,4 +116,4 @@ Batch evaluation supports concurrency, retries, resume, and full traces. See [us
 
 [MIT](LICENSE) for DVP code. Third-party software, datasets, retrieval assets, and model weights retain their respective licenses.
 
-Built on Lean, Mathlib, LeanExplore, and LiteLLM, with lessons from Codex, Claude Code, and DSH.
+Built on Lean, Mathlib, and LeanExplore, with lessons from Codex, Claude Code, and DSH.
