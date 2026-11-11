@@ -10,7 +10,7 @@ A single-agent Lean theorem-proving harness with LiteLLM model calls, local Lean
 
 ## Performance
 
-Pass rates (%) within 200 interaction turns per problem.
+Pass rates (%) using `DeepSeek-V4.1-flash-1012` within 200 interaction turns per problem.
 
 | Benchmark | daVinci-Prover | Claude Code | Codex | DeepSeek Harness |
 | --- | ---: | ---: | ---: | ---: |
