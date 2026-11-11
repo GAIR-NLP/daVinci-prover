@@ -10,18 +10,18 @@ A single-agent Lean theorem-proving harness with LiteLLM model calls, local Lean
 
 ## Performance
 
-Historical acceptance rates (%):
+Pass rates (%) within 200 interaction turns per problem.
 
-| Model | Putnam-200 | FATE-X |
-| --- | ---: | ---: |
-| `deepseek-v4.1-flash-1012 (1M)` | 87.0 | 40.0 |
-| `deepseek-v4-flash-0731 (1M)` | 85.5 | 38.0 |
-| `Qwen3.8-27B (256k)` | 10.0 | 2.0 |
+| Benchmark | daVinci-Prover | Claude Code | Codex | DeepSeek Harness |
+| --- | ---: | ---: | ---: | ---: |
+| FATE-H | 93.0 | 85.0 | 86.0 | 93.0 |
+| FATE-X | 47.0 | 45.0 | 20.0 | 37.0 |
+| Putnam-200 | 87.5 | 86.0 | 86.0 | 88.5 |
 
 ## Installation
 
 Requires Linux, Python **3.11+** (3.12 recommended), and Lean **4.35.0**.
-Prepared environment: `GAIR-NLP/daVinci-Prover:4.35`.
+
 
 Let your coding agent follow the [installation instructions](docs/agent-install.md).
 
