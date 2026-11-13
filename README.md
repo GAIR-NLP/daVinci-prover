@@ -1,8 +1,10 @@
 # daVinci-Prover
 <div align="left">
 
-[![arXiv](https://img.shields.io/badge/arXiv-xxxx.xxxxx-b31b1b.svg?style=for-the-badge)]()
-[![Data](https://img.shields.io/badge/Data-4d5eff?style=for-the-badge&logo=huggingface&logoColor=ffffff&labelColor)](https://huggingface.co/datasets/davinci-prover/agentic-prover-SFT)
+[![arXiv](https://img.shields.io/badge/arXiv-2611.16433-b31b1b.svg?style=for-the-badge)](https://arxiv.org/abs/2611.16433)
+[![MT DATA](https://img.shields.io/badge/MT%20DATA-4d5eff?style=for-the-badge&logo=huggingface&logoColor=ffffff&labelColor)](https://huggingface.co/datasets/davinci-prover/agentic-prover-SFT)
+[![SFT DATA](https://img.shields.io/badge/SFT%20DATA-4d5eff?style=for-the-badge&logo=huggingface&logoColor=ffffff&labelColor)](https://huggingface.co/datasets/davinci-prover/agentic-prover-SFT)
+[![RL DATA](https://img.shields.io/badge/RL%20DATA-4d5eff?style=for-the-badge&logo=huggingface&logoColor=ffffff&labelColor)](https://huggingface.co/datasets/davinci-prover/agentic-prover-SFT)
 [![Model](https://img.shields.io/badge/Model-4d5eff?style=for-the-badge&logo=huggingface&logoColor=ffffff&labelColor)]()
 </div>
 
